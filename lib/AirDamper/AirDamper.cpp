@@ -1,0 +1,63 @@
+
+#include "AirDamper.h"
+#include <Arduino.h>
+
+void AirDamper::init() {
+  pinMode(_step_pin, OUTPUT); 
+  pinMode(_direction_pin, OUTPUT);
+  pinMode(_sleep_pin, OUTPUT);
+}
+
+void AirDamper::hardResetPosition() {
+  makeStep(false, _stepRange);
+  _currentPosition = 0;
+}
+
+void AirDamper::moveToPercentage(int percentage) {
+  float targetStep = percentage == 0 ? 0 : ((float) percentage / 100) * _stepRange;
+
+  if (targetStep < _currentPosition)
+  {
+    close(_currentPosition - targetStep);
+  }
+  else if (targetStep > _currentPosition)
+  {
+    open(targetStep - _currentPosition);
+  }
+}
+
+void AirDamper::moveTo(int relativePosition) {
+  int targetStep = _currentPosition + relativePosition;
+  if (targetStep < _currentPosition)
+  {
+    close(_currentPosition - targetStep);
+  }
+  else if (targetStep > _currentPosition)
+  {
+    open(targetStep - _currentPosition);
+  }
+}
+
+void AirDamper::close(int steps) {
+  makeStep(false, steps);
+}
+
+void AirDamper::open(int steps) {
+  makeStep(true, steps);
+}
+
+void AirDamper::makeStep(bool open, int numberOfSteps) {
+  _currentPosition = open ? _currentPosition + numberOfSteps : _currentPosition - numberOfSteps;
+  digitalWrite(_direction_pin, open ? LOW : HIGH); //Changes the rotation direction
+  digitalWrite(_sleep_pin, LOW);
+
+  delay(20);
+  for(int x = 0; x < numberOfSteps; x++) {
+    digitalWrite(_step_pin, HIGH);
+    delay(30);
+    digitalWrite(_step_pin, LOW);
+    delay(30);
+  }
+  delay(500);
+  digitalWrite(_sleep_pin, HIGH);
+}
