@@ -5,7 +5,7 @@
 
 class LogManager {
 private:
-    static const int MAX_LOGS = 50; 
+    static const int MAX_LOGS = 100; 
     String logs[MAX_LOGS];
     int head;
     int count;

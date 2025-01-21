@@ -6,7 +6,7 @@
 #include "Timer.h"
 #include "AirDamper.h"
 #include "PIDController.h"
-#include "Configuration.h"
+#include "WebserverConfiguration.h"
 #include "LogManager.h"
 
 #define OLED_WIDTH 128
@@ -45,7 +45,7 @@ MAX6675 waterSensor(SCK_PIN, CS_PIN, SO_PIN_WATER);
 MAX6675 exhaustSensor(SCK_PIN, CS_PIN, SO_PIN_EXHAUST);
 AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 90, logManager);
 Timer timer;
-Configuration config("4G-Gateway-21E0", "snaggedagge", logManager, stats);
+WebserverConfiguration config("4G-Gateway-21E0", "snaggedagge", logManager, stats);
 
 int wantedTemperature = 185;
 bool reachedTemperature = false;
@@ -74,9 +74,7 @@ void setup() {
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
   primaryAirDamper.open(20);
-
-  config.connectToWiFi();
-  config.setUpOverTheAirProgramming();
+  config.init();
 }
 
 void loop() {
@@ -86,6 +84,8 @@ void loop() {
   stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
   stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
 
+  // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
+  // using different gains could also work
   if (!reachedTemperature && stats.exhaustTemperature > 160)
   {
     reachedTemperature = true;
