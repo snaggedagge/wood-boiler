@@ -55,7 +55,6 @@ private:
     LogManager& logManager;
     Stats& stats;
 
-    
     void connectToWiFi() {
         logManager.addLog("Connecting to " + (String)ssid);
 /*
@@ -72,10 +71,11 @@ private:
         }
     }
 
-    void setUpOverTheAirProgramming() {
+    void setupOtp() { // Over the air programming. Enables flashing over WIFI
         ArduinoOTA.setHostname("wood-boiler");
         ArduinoOTA.begin();
     }
+
 public:
     WebserverConfiguration(const char* wifi_ssid, const char* wifi_password, LogManager& lm, Stats& s) : 
     ssid(wifi_ssid), password(wifi_password), server(80), logManager(lm), stats(s) { }
@@ -102,7 +102,7 @@ public:
     void init() {
         WiFi.mode(WIFI_STA);
         connectToWiFi();
-        setUpOverTheAirProgramming();
+        setupOtp();
         if (MDNS.begin("esp8266")) {
             logManager.addLog(F("mDNS responder started"));
         } else {
@@ -116,6 +116,7 @@ public:
         ArduinoOTA.handle();
         server.handleClient();
         if (WiFi.status() != WL_CONNECTED) {
+            logManager.addLog(F("Wifi not connected, reconnecting.."));    
             WiFi.disconnect();
             connectToWiFi();
         }
