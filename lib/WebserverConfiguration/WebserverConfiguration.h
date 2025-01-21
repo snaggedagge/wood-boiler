@@ -10,6 +10,7 @@
 #include "LogManager.h"
 #include "Stats.h"
 
+// Use separate PROGMEM parts, sending chunked responses from server which minimizes memory footprint
 const char htmlPart1[] PROGMEM = 
     "<!DOCTYPE html>"
     "<html lang=\"en\">"
@@ -30,22 +31,22 @@ const char htmlPart1[] PROGMEM =
     "    <table class=\"stats-table\">"
     "        <tr><th>Property</th><th>Value</th></tr>";
 
-    const char htmlPart2[] PROGMEM = 
-            "        <tr><td>Burn Time</td><td>%s</td></tr>"
-            "        <tr><td>Exhaust Temperature</td><td>%d</td></tr>"
-            "        <tr><td>Water Temperature</td><td>%d</td></tr>"
-            "        <tr><td>Lower Exhaust Limit</td><td>%d</td></tr>"
-            "        <tr><td>Upper Exhaust Limit</td><td>%d</td></tr>"
-            "        <tr><td>Primary Air Damper</td><td>%d</td></tr>"
-            "        <tr><td>Heating</td><td>%s</td></tr>"
-            "    </table>"
-            "    <div class=\"log\">"
-            "        <h3>Log</h3>";
+const char htmlPart2[] PROGMEM = 
+    "        <tr><td>Burn Time</td><td>%s</td></tr>"
+    "        <tr><td>Exhaust Temperature</td><td>%d</td></tr>"
+    "        <tr><td>Water Temperature</td><td>%d</td></tr>"
+    "        <tr><td>Lower Exhaust Limit</td><td>%d</td></tr>"
+    "        <tr><td>Upper Exhaust Limit</td><td>%d</td></tr>"
+    "        <tr><td>Primary Air Damper</td><td>%d</td></tr>"
+    "        <tr><td>Heating</td><td>%s</td></tr>"
+    "    </table>"
+    "    <div class=\"log\">"
+    "        <h3>Log</h3>";
 
-    const char htmlPart3[] PROGMEM = 
-            "    </div>"
-            "</body>"
-            "</html>";
+const char htmlPart3[] PROGMEM = 
+    "    </div>"
+    "</body>"
+    "</html>";
 
 class WebserverConfiguration {
 private:
