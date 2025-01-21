@@ -8,6 +8,7 @@
 #include <ArduinoOTA.h>
 
 #include "LogManager.h"
+#include "Stats.h"
 
 const char htmlPart1[] PROGMEM = 
     "<!DOCTYPE html>"

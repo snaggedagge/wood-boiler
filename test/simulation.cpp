@@ -10,11 +10,8 @@ double Kp = 0.07;   // Proportional gain
 double Ki = 0.0;   // Integral gain
 double Kd = 0.0;   // Derivative gain
 
-int minutes = 0;
-
 void simulate(PIDController pid, int temp) {
-    minutes += 2;
-    float pidCorrection = pid.calculateControlSignal(185, temp, minutes);
+    float pidCorrection = pid.calculateControlSignal(185, temp, 2);
     int correction = (int) round(pidCorrection);
     std::cout << "Temp "  << temp << " Correction " << correction << " (" << pidCorrection << ")\n";
 }
