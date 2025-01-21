@@ -3,11 +3,10 @@
 
 #include <Arduino.h>
 
-#define LOG_SIZE 50  // Define the size of the log
-
 class LogManager {
 private:
-    String logs[LOG_SIZE];
+    static const int MAX_LOGS = 50; 
+    String logs[MAX_LOGS];
     int head;
     int count;
 public:
@@ -15,18 +14,17 @@ public:
 
     void addLog(const String &log) {
         logs[head] = log;
-        head = (head + 1) % LOG_SIZE;
-        if (count < LOG_SIZE) {
+        head = (head + 1) % MAX_LOGS;
+        if (count < MAX_LOGS) {
             count++;
         }
     }
 
-    String getLog() {
-        String result = "Logs:\n";
+    String getLog(String prefix, String postfix) {
+        String result = "";
         for (int i = 0; i < count; i++) {
-            int index = (head + i - count) % LOG_SIZE; 
-            result += "\t" + logs[index];
-            result += "\n";
+            int index = (head - i) % MAX_LOGS; 
+            result += prefix + logs[index] + postfix;
         }
         return result; 
     }

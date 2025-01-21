@@ -30,6 +30,13 @@
 #define STEP_PIN 1 // TX
 #define STEPPER_SLEEP_PIN 14 // D5
 
+Stats stats = {0, 0, 0, 100, 250, true, 0};
+
+// PID parameters
+double Kp = 0.07;   // Proportional gain
+double Ki = 0.0;   // Integral gain
+double Kd = 0.0;   // Derivative gain
+PIDController pidController(Kp, Ki, Kd);
 LogManager logManager;
 
 Adafruit_SH1106 oled(-1);
@@ -37,87 +44,74 @@ Display display(&oled, OLED_WIDTH, OLED_HEIGHT);
 MAX6675 waterSensor(SCK_PIN, CS_PIN, SO_PIN_WATER);
 MAX6675 exhaustSensor(SCK_PIN, CS_PIN, SO_PIN_EXHAUST);
 AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 90, logManager);
-
-int exhaustTemp;
-int waterTemp;
-int upperLimit = 250;
-int lowerLimit = 100;
-int wantedTemperature = 185;
-int lastOpenPosition = 0;
-
 Timer timer;
+Configuration config("4G-Gateway-21E0", "snaggedagge", logManager, stats);
 
-// PID parameters
-double Kp = 0.10;   // Proportional gain
-double Ki = 0.02;   // Integral gain
-double Kd = 0.0;   // Derivative gain
-PIDController pidController(Kp, Ki, Kd);
+int wantedTemperature = 185;
+bool reachedTemperature = false;
 
-const char* ssid = "4G-Gateway-21E0";
-const char* password = "snaggedagge";
-
-Configuration config(ssid, password, logManager);
-
+void updateTemperatures() {
+    int exhaustTemperature = exhaustSensor.readCelsius();
+    int waterTemperature = waterSensor.readCelsius();
+    if (exhaustTemperature < 350 && exhaustTemperature > 0)
+    {
+      stats.exhaustTemperature = exhaustTemperature;
+    }
+    if (waterTemperature < 130 && waterTemperature > 0)
+    {
+      stats.waterTemperature = waterTemperature;
+    }
+}
 
 void setup() {
   pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH);
   Wire.begin(SDA_PIN, SCL_PIN);
   display.init();
   display.displayLogo();
   delay(3000);
-  digitalWrite(RELAY_PIN, LOW);
-  exhaustTemp = exhaustSensor.readCelsius();
-  waterTemp = waterSensor.readCelsius();
+  updateTemperatures();
+  primaryAirDamper.init();
+  primaryAirDamper.hardResetPosition();
+  primaryAirDamper.open(20);
 
-
-  logManager.addLog("Booting");
-  
   config.connectToWiFi();
   config.setUpOverTheAirProgramming();
-
-  primaryAirDamper.init();
-  // MF sounds horrific when closing it fully without knowing exakt position for sure. 
-  // Either construct a softer stopper, or dont include in code...
-  //primaryAirDamper.hardResetPosition();
-  primaryAirDamper.open(25);
 }
 
 void loop() {
   config.handleUpdate();  
   unsigned long millisSinceStart = millis();
   int sinceStartedMinutes = millisSinceStart / 1000 / 60;
-  boolean shouldHeat = !(sinceStartedMinutes > 60 && exhaustTemp < lowerLimit);
-  if (waterTemp >= 100)
+  stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
+  stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
+
+  if (!reachedTemperature && stats.exhaustTemperature > 160)
   {
-    shouldHeat = false;
+    reachedTemperature = true;
+    primaryAirDamper.moveToPercentage(13);
+    timer.hasPassed(120, millisSinceStart); // Reset timer
   }
 
-  display.display(exhaustTemp, waterTemp, lowerLimit, upperLimit, shouldHeat, sinceStartedMinutes);
   if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
   {
-    exhaustTemp = exhaustSensor.readCelsius();
-    waterTemp = waterSensor.readCelsius();
-    digitalWrite(RELAY_PIN, shouldHeat ? HIGH : LOW);
+    updateTemperatures();
+    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
+    digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
   }
+  display.display(stats);
 
-  if (!shouldHeat && primaryAirDamper._currentPosition > 0)
+  if (!stats.heating && primaryAirDamper._currentPosition > 0)
   {
-    logManager.addLog("Turning off heating, closing damper");
-    lastOpenPosition = primaryAirDamper._currentPosition;
+    logManager.addLog(F("Turning off heating, closing damper"));
     primaryAirDamper.moveToPercentage(0);
   }
-  else if(shouldHeat && primaryAirDamper._currentPosition == 0) {
-    // As a safety mechanism to begin with. This could happen if temperature sensor gives faulty readings.
-    // Maybe add failsafe to readings?
-    logManager.addLog("Reopening damper, should heat");
-    primaryAirDamper.open(lastOpenPosition);
-  }
 
-  if (exhaustTemp > 140 && shouldHeat && timer.hasPassed(300, millisSinceStart)) // Adjust stepper every five minutes
+  if (reachedTemperature && stats.heating && timer.hasPassed(120, millisSinceStart)) // Adjust stepper every 2 minutes
   {
-    float pidCorrection = pidController.calculateControlSignal(wantedTemperature, exhaustTemp);
+    float pidCorrection = pidController.calculateControlSignal(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
     int correction = (int) round(pidCorrection);
-    logManager.addLog("PID Correction: " + String(correction) + " (" + String(pidCorrection) + ") for temperature " + String(exhaustTemp));
+    logManager.addLog("PID " + String(correction) + "(" + String(pidCorrection) + ") " + String(stats.exhaustTemperature));
     primaryAirDamper.moveTo(correction);
   }
   delay(500);

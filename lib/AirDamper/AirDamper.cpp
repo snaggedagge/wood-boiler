@@ -15,15 +15,7 @@ void AirDamper::hardResetPosition() {
 
 void AirDamper::moveToPercentage(int percentage) {
   float targetStep = percentage == 0 ? 0 : ((float) percentage / 100) * _stepRange;
-
-  if (targetStep < _currentPosition)
-  {
-    close(_currentPosition - targetStep);
-  }
-  else if (targetStep > _currentPosition)
-  {
-    open(targetStep - _currentPosition);
-  }
+  moveTo(targetStep - _currentPosition);
 }
 
 void AirDamper::moveTo(int relativePosition) {
@@ -47,7 +39,8 @@ void AirDamper::open(int steps) {
 }
 
 void AirDamper::makeStep(bool open, int numberOfSteps) {
-  _currentPosition = open ? _currentPosition + numberOfSteps : _currentPosition - numberOfSteps;
+  int newPosition = open ? _currentPosition + numberOfSteps : _currentPosition - numberOfSteps;
+  _currentPosition = constrain(newPosition, 0, _stepRange);
   digitalWrite(_direction_pin, open ? LOW : HIGH); //Changes the rotation direction
   digitalWrite(_sleep_pin, LOW);
 

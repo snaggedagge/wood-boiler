@@ -50,10 +50,10 @@ void Display::writeTextAtEndOfLine(int line, String text) {
   d->print(String(text));
 }
 
-void Display::display(int exhaustTemperature, int waterTemperature, int lowerLimit, int upperLimit, bool heating, int sinceStartedMinutes) {
+void Display::display(Stats& stats) {
   d->clearDisplay();
   drawImage(effecta_logo_small, 0, 0);
-  if (heating)
+  if (stats.heating)
   {
     if (rotated)
     {
@@ -65,21 +65,21 @@ void Display::display(int exhaustTemperature, int waterTemperature, int lowerLim
   }
 
   drawImage(o2_small, 0, 22);
-  writeLine(20, 25, String(10) + " %");
+  writeLine(20, 25, String(stats.primaryAirDamperPosition) + " %");
 
   drawImage(waterdrop_small, 0, 42);
-  writeLine(20, 47, String(waterTemperature) + " C");
+  writeLine(20, 47, String(stats.waterTemperature) + " C");
 
   drawImage(heating_small, 70, 28);
-  writeLine(92, 32, String(exhaustTemperature) + " C");
+  writeLine(92, 32, String(stats.exhaustTemperature) + " C");
 
-  writeTextAtEndOfLine(7, String(lowerLimit) + " - " + String(upperLimit) + "    ");
+  writeTextAtEndOfLine(7, String(stats.lowerExhaustLimit) + " - " + String(stats.upperExhaustLimit) + "    ");
 /*
   writeLine(4, "O2: " + String(10) + " %");
   writeLine(6, "Temperatur: " + String(temperature) + " C");
   writeLine(7, "Grans: " + String(lowerLimit) + "-" + String(upperLimit)  + " C");
 */
-  writeTextAtEndOfLine(1, String(sinceStartedMinutes/60) + "H " + String(sinceStartedMinutes%60) + "M ");
+  writeTextAtEndOfLine(1, String(stats.burnTimeMinutes/60) + "H " + String(stats.burnTimeMinutes%60) + "M ");
   d->display();
 }
 
