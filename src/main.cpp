@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <max6675.h>
 
-
 #include "Display.h"
 #include "Timer.h"
 #include "AirDamper.h"
@@ -12,12 +11,19 @@
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
 
-// Built in led (Uses Adafruit_SSD1306) ESP8266 OLED
-//#define SDA_PIN 14
-//#define SCL_PIN 12
+// Simply comment out to test builtin led
+//#define HARDWARE_DISCONNECTED 1
+#ifdef HARDWARE_DISCONNECTED
+  // Built in led (Uses Adafruit_SSD1306) ESP8266 OLED
+  #define SDA_PIN 14
+  #define SCL_PIN 12
+  #define STEPPER_SLEEP_PIN 4 // just a random pin so it doesnt disturb builtin display
+#else
+  #define SDA_PIN 4
+  #define SCL_PIN 0
+  #define STEPPER_SLEEP_PIN 14 // D5
+#endif
 
-#define SDA_PIN 4
-#define SCL_PIN 0
 #define RELAY_PIN 2
 
 #define SO_PIN_WATER 16 // D0
@@ -25,12 +31,8 @@
 #define SCK_PIN 15 // D8
 #define CS_PIN 13 // D7
 
-
 #define DIRECTION_PIN 3 // RX
 #define STEP_PIN 1 // TX
-#define STEPPER_SLEEP_PIN 14 // D5
-
-Stats stats = {0, 0, 0, 100, 250, true, 0};
 
 // PID parameters
 double Kp = 0.018;   // Proportional gain
@@ -39,19 +41,27 @@ double Kd = 0.02;   // Derivative gain
 PIDController pidController(Kp, Ki, Kd);
 LogManager logManager;
 
-Adafruit_SH1106 oled(-1);
-Display display(&oled, OLED_WIDTH, OLED_HEIGHT);
+#ifdef HARDWARE_DISCONNECTED
+  Adafruit_SSD1306 oled(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
+  Display display(&oled, OLED_WIDTH, OLED_HEIGHT, true);
+#else
+  Adafruit_SH1106 oled(-1);
+  Display display(&oled, OLED_WIDTH, OLED_HEIGHT, true);
+#endif
+
 MAX6675 waterSensor(SCK_PIN, CS_PIN, SO_PIN_WATER);
 MAX6675 exhaustSensor(SCK_PIN, CS_PIN, SO_PIN_EXHAUST);
 AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 56, logManager);
 Timer timer;
-WebserverConfiguration config("4G-Gateway-21E0", "snaggedagge", logManager, stats);
+Stats stats = {0, 0, 0, 100, 250, true, 0};
+WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge", logManager, stats);
 
 int wantedTemperature = 185;
 bool reachedTemperature = false;
 
 float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
   int counter = 0;
+  int errorCounter = 0;
   float accumulatedTemperature = 0;
 
   while (counter < 3) { // Take average of three readings
@@ -60,6 +70,13 @@ float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
     {
       accumulatedTemperature += temperature;
       counter++;
+    }
+    else {
+      errorCounter++;
+      if (errorCounter > 3)
+      {
+        return higherLimit;
+      }
     }
     delay(50);
   }
@@ -82,19 +99,19 @@ void setup() {
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
   primaryAirDamper.moveToStep(20);
-  config.init();
+  webserverConfig.init();
 }
 
 void loop() {
-  config.handleUpdate();  
+  webserverConfig.handleUpdate();  
   unsigned long millisSinceStart = millis();
   int sinceStartedMinutes = millisSinceStart / 1000 / 60;
   stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
   stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
 
   // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
-  // using different gains could also work
-  if (!reachedTemperature && stats.exhaustTemperature > 160)
+  // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
+  if ((!reachedTemperature && stats.exhaustTemperature > 160) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
   {
     reachedTemperature = true;
     primaryAirDamper.moveToStep(11);

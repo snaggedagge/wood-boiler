@@ -73,7 +73,7 @@ private:
     }
 
     void setupOtp() { // Over the air programming. Enables flashing over WIFI
-        ArduinoOTA.setHostname("wood-boiler");
+        //ArduinoOTA.setHostname("wood-boiler");
         ArduinoOTA.begin();
     }
 

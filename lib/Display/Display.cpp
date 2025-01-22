@@ -1,5 +1,6 @@
 #include "Display.h"
 #include "Images.h"
+
   /*
   The Adafruit SSD1306 OLED library typically uses a default font size of 1, which corresponds to a 5x8 pixel font. This
   means each character is 5 pixels wide and 8 pixels tall. When you use this font size on the display, each character you
@@ -8,7 +9,7 @@
   consider this additional space.
   */
 
-Display::Display(Adafruit_SH1106* oled, int screen_width, int screen_height) {
+Display::Display(Adafruit_GFX* oled, int screen_width, int screen_height, bool isSH1106) {
   d = oled;
   width = screen_width;
   height = screen_height;
@@ -16,16 +17,36 @@ Display::Display(Adafruit_SH1106* oled, int screen_width, int screen_height) {
 }
 
 void Display::init() {
-  d->begin(SH1106_SWITCHCAPVCC, 0x3C);
+  if (isSH1106) {
+      ((Adafruit_SH1106*)d)->begin(SH1106_SWITCHCAPVCC, 0x3C);
+  } else {
+      ((Adafruit_SSD1306*)d)->begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  }
   delay(500);
   d->setTextSize(1);
   d->setTextColor(WHITE);
 }
 
+void Display::display() {
+  if (isSH1106) {
+      ((Adafruit_SH1106*)d)->display();
+  } else {
+      ((Adafruit_SSD1306*)d)->display();
+  }
+}
+
+void Display::clearDisplay() {
+  if (isSH1106) {
+      ((Adafruit_SH1106*)d)->clearDisplay();
+  } else {
+      ((Adafruit_SSD1306*)d)->clearDisplay();
+  }
+}
+
 void Display::displayLogo() {
-  d->clearDisplay();
+  clearDisplay();
   drawImage(effecta_logo_large, 0, 0);
-  d->display();
+  display();
 }
 
 /*
@@ -51,7 +72,7 @@ void Display::writeTextAtEndOfLine(int line, String text) {
 }
 
 void Display::display(Stats& stats) {
-  d->clearDisplay();
+  clearDisplay();
   drawImage(effecta_logo_small, 0, 0);
   if (stats.heating)
   {
@@ -80,7 +101,7 @@ void Display::display(Stats& stats) {
   writeLine(7, "Grans: " + String(lowerLimit) + "-" + String(upperLimit)  + " C");
 */
   writeTextAtEndOfLine(1, String(stats.burnTimeMinutes/60) + "H " + String(stats.burnTimeMinutes%60) + "M ");
-  d->display();
+  display();
 }
 
 void Display::drawImage(Image img, int x, int y) {
