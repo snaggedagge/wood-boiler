@@ -33,9 +33,9 @@
 Stats stats = {0, 0, 0, 100, 250, true, 0};
 
 // PID parameters
-double Kp = 0.07;   // Proportional gain
-double Ki = 0.0;   // Integral gain
-double Kd = 0.0;   // Derivative gain
+double Kp = 0.018;   // Proportional gain
+double Ki = 0.0025;   // Integral gain
+double Kd = 0.02;   // Derivative gain
 PIDController pidController(Kp, Ki, Kd);
 LogManager logManager;
 
@@ -43,24 +43,32 @@ Adafruit_SH1106 oled(-1);
 Display display(&oled, OLED_WIDTH, OLED_HEIGHT);
 MAX6675 waterSensor(SCK_PIN, CS_PIN, SO_PIN_WATER);
 MAX6675 exhaustSensor(SCK_PIN, CS_PIN, SO_PIN_EXHAUST);
-AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 90, logManager);
+AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 56, logManager);
 Timer timer;
 WebserverConfiguration config("4G-Gateway-21E0", "snaggedagge", logManager, stats);
 
 int wantedTemperature = 185;
 bool reachedTemperature = false;
 
+float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
+  int counter = 0;
+  float accumulatedTemperature = 0;
+
+  while (counter < 3) { // Take average of three readings
+    float temperature = sensor.readCelsius();
+    if (temperature < higherLimit && temperature > lowerLimit)
+    {
+      accumulatedTemperature += temperature;
+      counter++;
+    }
+    delay(50);
+  }
+  return accumulatedTemperature / (float) counter;
+}
+
 void updateTemperatures() {
-    int exhaustTemperature = exhaustSensor.readCelsius();
-    int waterTemperature = waterSensor.readCelsius();
-    if (exhaustTemperature < 350 && exhaustTemperature > 0)
-    {
-      stats.exhaustTemperature = exhaustTemperature;
-    }
-    if (waterTemperature < 130 && waterTemperature > 0)
-    {
-      stats.waterTemperature = waterTemperature;
-    }
+    stats.exhaustTemperature = readSensor(exhaustSensor, 0, 350);
+    stats.waterTemperature = readSensor(waterSensor, 0, 130);
 }
 
 void setup() {
@@ -73,7 +81,7 @@ void setup() {
   updateTemperatures();
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
-  primaryAirDamper.open(20);
+  primaryAirDamper.moveToStep(20);
   config.init();
 }
 
@@ -89,7 +97,7 @@ void loop() {
   if (!reachedTemperature && stats.exhaustTemperature > 160)
   {
     reachedTemperature = true;
-    primaryAirDamper.moveToPercentage(13);
+    primaryAirDamper.moveToStep(11);
     timer.hasPassed(120, millisSinceStart); // Reset timer
   }
 
@@ -104,7 +112,7 @@ void loop() {
   if (!stats.heating && primaryAirDamper._currentPosition > 0)
   {
     logManager.addLog(F("Turning off heating, closing damper"));
-    primaryAirDamper.moveToPercentage(0);
+    primaryAirDamper.moveToStep(0);
   }
 
   if (reachedTemperature && stats.heating && timer.hasPassed(120, millisSinceStart)) // Adjust stepper every 2 minutes

@@ -21,6 +21,7 @@ public:
 
     void init();
     void moveToPercentage(int percentage);
+    void moveToStep(int targetStep);
     void moveTo(int relativePosition);
     void open(int steps);
     void close(int steps);
