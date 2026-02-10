@@ -74,9 +74,8 @@ void WebserverConfiguration::handleRoot() {
 
     String path = server.uri();
     if (path.startsWith("/test/")) {
-        String number = path.substring(6);
-        int num = number.toInt();
-        stats.primaryAirDamperPosition += num;
+        int number = path.substring(6).toInt();
+        stats.primaryAirDamperPosition += number;
     }
 
     int hours = stats.burnTimeMinutes / 60;
@@ -84,25 +83,27 @@ void WebserverConfiguration::handleRoot() {
     char timeString[32];
     snprintf(timeString, sizeof(timeString), "%d Hours %d Minutes", hours, minutes);
 
-    char dynamicPart[sizeof(htmlPart2)+50];
+    char dynamicPart[512];
     snprintf(dynamicPart, sizeof(dynamicPart), htmlPart2,
-        timeString, stats.exhaustTemperature, stats.waterTemperature, stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition, stats.heating ? "yes" : "no");
+             timeString, stats.exhaustTemperature, stats.waterTemperature,
+             stats.lowerExhaustLimit, stats.upperExhaustLimit,
+             stats.primaryAirDamperPosition, stats.heating ? "yes" : "no");
+
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send(200, "text/html", "");
 
     server.sendContent_P(htmlPart1); 
     server.sendContent(dynamicPart);
 
-    char buffer[512];
+    // Send in chunks
+    char buffer[256];
     size_t len = 0;
-
     const auto& entries = BurnLogger::getEntries();
     for(const auto& correction : entries)
     {
         len += snprintf(buffer + len, sizeof(buffer) - len, "<p>PID %d (%.2f) Temp %d Time %d</p>", (int) round(correction.correction), correction.correction, 
             correction.exhaustTemperature, correction.burnTimeMinutes);
-        if(len > 200)
-        {
+        if (len > sizeof(buffer) * 0.8) {
             server.sendContent(buffer);
             len = 0;
         }
@@ -114,8 +115,8 @@ void WebserverConfiguration::handleRoot() {
 
     int sinceStartedMinutes = millis() / 1000 / 60;
     server.sendContent("Free memory " + String(ESP.getFreeHeap()) + " " + String(ESP.getHeapFragmentation()) + "%"+ "</br>" 
-    + "Minutes since start " + String(sinceStartedMinutes) + "</br>" 
-    + "Reset reason: " + ESP.getResetReason());
+        + "Minutes since start " + String(sinceStartedMinutes) + "</br>" 
+        + "Reset reason: " + ESP.getResetReason());
     server.sendContent_P(htmlPart3); 
     server.sendContent("");
 }
