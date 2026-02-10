@@ -6,7 +6,7 @@
 #include "AirDamper.h"
 #include "PIDController.h"
 #include "WebserverConfiguration.h"
-#include "LogManager.h"
+#include "BurnLogger.h"
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
@@ -17,6 +17,7 @@
 
 #define SDA_PIN 4
 #define SCL_PIN 0
+
 #define RELAY_PIN 2
 
 #define SO_PIN_WATER 16 // D0
@@ -28,57 +29,36 @@
 #define STEP_PIN 1 // TX
 #define STEPPER_SLEEP_PIN 14 // D5
 
-
-
 // PID parameters
 double Kp = 0.018;   // Proportional gain
-double Ki = 0.0025;   // Integral gain
-double Kd = 0.02;   // Derivative gain
+double Ki = 0.001;   // Integral gain // 0.001 worked nicely but was teeny tiny to slow, especially at the end. 0.0012 too aggressive
+double Kd = 0.20;   // Derivative gain // 0.15 worked nicely, lets try a little bit more aggressive
 PIDController pidController(Kp, Ki, Kd);
-LogManager logManager;
 
 Adafruit_SH1106 oled(-1);
 Display display(&oled, OLED_WIDTH, OLED_HEIGHT);
 MAX6675 waterSensor(SCK_PIN, CS_PIN, SO_PIN_WATER);
 MAX6675 exhaustSensor(SCK_PIN, CS_PIN, SO_PIN_EXHAUST);
-AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 56, logManager);
+AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 56);
 Timer timer;
-Stats stats = {0, 0, 0, 100, 250, true, 0};
-WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge", logManager, stats);
+WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge");
 
-int wantedTemperature = 185;
+int wantedTemperature = 195;
 bool reachedTemperature = false;
 
 float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
-  int counter = 0;
-  int errorCounter = 0;
-  float accumulatedTemperature = 0;
-
-  while (counter < 3) { // Take average of three readings
-    float temperature = sensor.readCelsius();
-    if (temperature < higherLimit && temperature > lowerLimit)
-    {
-      accumulatedTemperature += temperature;
-      counter++;
-    }
-    else {
-      errorCounter++;
-      if (errorCounter > 3)
-      {
-        return higherLimit;
-      }
-    }
-    delay(50);
-  }
-  return accumulatedTemperature / (float) counter;
+  return sensor.readCelsius();
 }
 
 void updateTemperatures() {
-    stats.exhaustTemperature = readSensor(exhaustSensor, 0, 350);
-    stats.waterTemperature = readSensor(waterSensor, 0, 130);
+    BurnLogger::getStats().exhaustTemperature = readSensor(exhaustSensor, 0, 350);
+    BurnLogger::getStats().waterTemperature = readSensor(waterSensor, 0, 130);
 }
 
 void setup() {
+
+  BurnLogger::getStats() = {0, 0, 0, 100, 250, true, 0};
+
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
   Wire.begin(SDA_PIN, SCL_PIN);
@@ -88,7 +68,8 @@ void setup() {
   updateTemperatures();
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
-  primaryAirDamper.moveToStep(20);
+  primaryAirDamper.moveToStep(40);
+  BurnLogger::getStats().primaryAirDamperPosition = primaryAirDamper._currentPosition;
   webserverConfig.init();
 }
 
@@ -96,38 +77,53 @@ void loop() {
   webserverConfig.handleUpdate();  
   unsigned long millisSinceStart = millis();
   int sinceStartedMinutes = millisSinceStart / 1000 / 60;
+  Stats& stats = BurnLogger::getStats();
   stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
   stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
 
   // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
   // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
-  if ((!reachedTemperature && stats.exhaustTemperature > 160) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
+  if (!reachedTemperature && stats.exhaustTemperature > 80 && sinceStartedMinutes > 0)
+  {
+    primaryAirDamper.moveToStep(22);
+    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
+  }
+  if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
   {
     reachedTemperature = true;
-    primaryAirDamper.moveToStep(11);
-    timer.hasPassed(120, millisSinceStart); // Reset timer
+    primaryAirDamper.moveToStep(18);
+    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
+    timer.hasPassed(180, millisSinceStart); // Reset timer
   }
 
+  // TODO: Only for testing
+  if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
+  {
+    primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
+  }
   if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
   {
     updateTemperatures();
-    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
     digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
   }
-  display.display(stats);
+  display.display(&stats);
 
   if (!stats.heating && primaryAirDamper._currentPosition > 0)
   {
-    logManager.addLog(F("Turning off heating, closing damper"));
     primaryAirDamper.moveToStep(0);
+    primaryAirDamper.shutdown();
+    //ESP.deepSleep(0);
   }
 
-  if (reachedTemperature && stats.heating && timer.hasPassed(120, millisSinceStart)) // Adjust stepper every 2 minutes
+  if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
   {
     float pidCorrection = pidController.calculateControlSignal(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
     int correction = (int) round(pidCorrection);
-    logManager.addLog("PID " + String(correction) + "(" + String(pidCorrection) + ") " + String(stats.exhaustTemperature));
+    BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
     primaryAirDamper.moveTo(correction);
+    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
+  } else if (stats.heating) {
+    pidController.updateMeasuredValue(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
   }
   delay(500);
 }

@@ -6,6 +6,11 @@ void AirDamper::init() {
   pinMode(_step_pin, OUTPUT); 
   pinMode(_direction_pin, OUTPUT);
   pinMode(_sleep_pin, OUTPUT);
+  digitalWrite(_sleep_pin, LOW);
+}
+
+void AirDamper::shutdown() {
+  digitalWrite(_sleep_pin, HIGH);
 }
 
 void AirDamper::hardResetPosition() {
@@ -45,14 +50,15 @@ void AirDamper::open(int steps) {
 
 void AirDamper::makeStep(bool open, int numberOfSteps) {
   int newPosition = open ? _currentPosition + numberOfSteps : _currentPosition - numberOfSteps;
-  if (newPosition > _stepRange || newPosition < 0)
-  {
+  int constrainedPosition = constrain(newPosition, 0, _stepRange);
+  if (constrainedPosition != newPosition) {
+    moveToStep(constrainedPosition);
     return;
   }
 
   _currentPosition = newPosition;
   digitalWrite(_direction_pin, open ? LOW : HIGH); //Changes the rotation direction
-  digitalWrite(_sleep_pin, LOW);
+  //digitalWrite(_sleep_pin, LOW);
 
   delay(20);
   for(int x = 0; x < numberOfSteps; x++) {
@@ -62,5 +68,5 @@ void AirDamper::makeStep(bool open, int numberOfSteps) {
     delay(30);
   }
   delay(500);
-  digitalWrite(_sleep_pin, HIGH);
+  //digitalWrite(_sleep_pin, HIGH);
 }
