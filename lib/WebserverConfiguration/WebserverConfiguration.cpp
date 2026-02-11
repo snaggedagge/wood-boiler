@@ -34,40 +34,27 @@ void WebserverConfiguration::setupOtp() { // Over the air programming. Enables f
     ArduinoOTA.begin();
 }
 
-void WebserverConfiguration::handleRoot() {
-    Stats& stats = BurnLogger::getStats();
 
-    String path = server.uri();
-    if (path.startsWith("/test/")) {
-        int number = path.substring(6).toInt();
-        stats.primaryAirDamperPosition += number;
-    }
-
-  File f = LittleFS.open("/index.html", "r");
-  server.streamFile(f, "text/html");
-  f.close();
-  
-  // TODO: Cache page when done tweaking
-  // // server.serveStatic("/", LittleFS, "/index.html", "max-age=86400");
-
-  /*
-    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/style.css", "text/css");
-  });
-  */
-}
 
 void WebserverConfiguration::init() {
     WiFi.mode(WIFI_STA);
     connectToWiFi();
     setupOtp();
-    server.on("/", [this]() { handleRoot(); }); 
-    server.onNotFound([this]() { handleRoot(); });
 
+    server.on("/restart", [this]() { ESP.restart(); }); 
     server.on("/api/stats", [this]() { handleStats(); });
     server.on("/api/logs", [this]() { handleLogs(); });
-
+    server.serveStatic("/", LittleFS, "/index.html", "max-age=86400");
+    // TODO: Cache page when done tweaking, and gzip it
     server.begin(); 
+
+    /*
+    String path = server.uri();
+    if (path.startsWith("/test/")) {
+        int number = path.substring(6).toInt();
+        stats.primaryAirDamperPosition += number;
+    }
+    */
 }
 
 void WebserverConfiguration::handleUpdate() {
@@ -102,12 +89,17 @@ void WebserverConfiguration::handleStats() {
 }
 
 void WebserverConfiguration::handleLogs() {
+    const auto& entries = BurnLogger::getEntries();
+    if (entries.size() == 0) {
+        server.send(200, "application/json", "[]");
+        return;
+    }
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send(200, "application/json", "");
+
     bool first = true;
     char buf[256];
     size_t len = 0;
-    const auto& entries = BurnLogger::getEntries();
     for(const auto& e : entries)
     {
         yield();

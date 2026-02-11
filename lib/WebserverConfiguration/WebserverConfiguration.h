@@ -18,7 +18,6 @@ public:
     WebserverConfiguration(const char* wifi_ssid, const char* wifi_password) : 
     ssid(wifi_ssid), password(wifi_password), server(80) { }
 
-    void handleRoot();
     void init();
     void handleUpdate();
     void reconnectIfDisconnected();
