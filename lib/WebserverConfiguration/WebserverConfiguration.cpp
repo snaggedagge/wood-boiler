@@ -134,8 +134,10 @@ void WebserverConfiguration::init() {
 void WebserverConfiguration::handleUpdate() {
     ArduinoOTA.handle();
     server.handleClient();
+}
+
+void WebserverConfiguration::reconnectIfDisconnected() {
     if (WiFi.status() != WL_CONNECTED) {
-        //logManager.addLog(F("Wifi not connected, reconnecting.."));    
         WiFi.disconnect();
         connectToWiFi();
     }

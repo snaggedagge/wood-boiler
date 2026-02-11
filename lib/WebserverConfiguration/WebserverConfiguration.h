@@ -18,6 +18,7 @@ public:
     void handleRoot();
     void init();
     void handleUpdate();
+    void reconnectIfDisconnected();
 };
 
 #endif

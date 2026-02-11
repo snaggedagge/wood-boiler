@@ -83,26 +83,26 @@ void loop() {
     stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
     stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
 
+    if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
+    {
+      primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
+    }
+
     // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
     // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
     if (!reachedTemperature && stats.exhaustTemperature > 80 && sinceStartedMinutes > 0)
     {
       primaryAirDamper.moveToStep(22);
     }
-    if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
+    if ((!reachedTemperature && stats.exhaustTemperature > 145) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
     {
       reachedTemperature = true;
       primaryAirDamper.moveToStep(18);
       timer.hasPassed(180, millisSinceStart); // Reset timer
     }
-
-    // TODO: Only for testing
-    if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
-    {
-      primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
-    }
     if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
     {
+      webserverConfig.reconnectIfDisconnected();
       updateTemperatures();
       digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
     }
