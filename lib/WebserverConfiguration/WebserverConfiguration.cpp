@@ -73,9 +73,11 @@ void WebserverConfiguration::handleStats() {
             "\"primaryAirDamper\":%d,"
             "\"freeHeap\":%d,"
             "\"heapFragmentation\":%d,"
-            "\"resetReason\":\"%s\"}",
+            "\"resetReason\":\"%s\","
+            "\"heating\":\"%s\"}",
             stats.exhaustTemperature, stats.waterTemperature, stats.burnTimeMinutes,
-            stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition, ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getResetReason().c_str());
+            stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition,
+            ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getResetReason().c_str(), stats.heating? "true" : "false");
 
   server.send(200, "application/json", json);
 }
