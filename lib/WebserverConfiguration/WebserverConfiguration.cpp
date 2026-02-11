@@ -9,55 +9,20 @@
 #include <ArduinoOTA.h>
 
 #include "BurnLogger.h"
-
-// Use separate PROGMEM parts, sending chunked responses from server which minimizes memory footprint
-const char htmlPart1[] PROGMEM = 
-    "<!DOCTYPE html>"
-    "<html lang=\"en\">"
-    "<head>"
-    "    <meta charset=\"UTF-8\">"
-    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-    "    <title>Boiler Stats</title>"
-    "    <style>"
-    "        body { font-family: Arial, sans-serif; margin: 20px; }"
-    "        .stats-table { width: 50%; border-collapse: collapse; margin-bottom: 20px; }"
-    "        .stats-table th, .stats-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }"
-    "        .stats-table th { background-color: #f4f4f4; }"
-    "        .log { border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; }"
-    "    </style>"
-    "</head>"
-    "<body>"
-    "    <h1>Boiler Stats</h1>"
-    "    <table class=\"stats-table\">"
-    "        <tr><th>Property</th><th>Value</th></tr>";
-
-const char htmlPart2[] PROGMEM = 
-    "        <tr><td>Burn Time</td><td>%s</td></tr>"
-    "        <tr><td>Exhaust Temperature</td><td>%d</td></tr>"
-    "        <tr><td>Water Temperature</td><td>%d</td></tr>"
-    "        <tr><td>Lower Exhaust Limit</td><td>%d</td></tr>"
-    "        <tr><td>Upper Exhaust Limit</td><td>%d</td></tr>"
-    "        <tr><td>Primary Air Damper</td><td>%d</td></tr>"
-    "        <tr><td>Heating</td><td>%s</td></tr>"
-    "    </table>"
-    "    <div class=\"log\">"
-    "        <h3>Log</h3>";
-
-const char htmlPart3[] PROGMEM = 
-    "    </div>"
-    "</body>"
-    "</html>";
+#include <LittleFS.h>
 
 
 void WebserverConfiguration::connectToWiFi() {
+
 /*
     IPAddress ip(192, 168, 1, 100); // 192.168.13.37
     IPAddress gateway(192, 168, 1, 1);
     IPAddress dns(8, 8, 8, 8);
     if (!WiFi.config(ip, dns, gateway)) {
-        addLog("Static IP Configuration Failed");
+        //addLog("Static IP Configuration Failed");
     }
-*/
+        */
+
     WiFi.begin(ssid, password);
     //if (WiFi.waitForConnectResult() != WL_CONNECTED) {
         //logManager.addLog(F("Connection Failed!"));    
@@ -78,48 +43,18 @@ void WebserverConfiguration::handleRoot() {
         stats.primaryAirDamperPosition += number;
     }
 
-    int hours = stats.burnTimeMinutes / 60;
-    int minutes = stats.burnTimeMinutes % 60;
-    char timeString[32];
-    snprintf(timeString, sizeof(timeString), "%d Hours %d Minutes", hours, minutes);
+  File f = LittleFS.open("/index.html", "r");
+  server.streamFile(f, "text/html");
+  f.close();
+  
+  // TODO: Cache page when done tweaking
+  // // server.serveStatic("/", LittleFS, "/index.html", "max-age=86400");
 
-    char dynamicPart[512];
-    snprintf(dynamicPart, sizeof(dynamicPart), htmlPart2,
-             timeString, stats.exhaustTemperature, stats.waterTemperature,
-             stats.lowerExhaustLimit, stats.upperExhaustLimit,
-             stats.primaryAirDamperPosition, stats.heating ? "yes" : "no");
-
-    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-    server.send(200, "text/html", "");
-
-    server.sendContent_P(htmlPart1); 
-    server.sendContent(dynamicPart);
-
-    // Send in chunks
-    char buffer[256];
-    size_t len = 0;
-    const auto& entries = BurnLogger::getEntries();
-    for(const auto& correction : entries)
-    {
-        yield();
-        len += snprintf(buffer + len, sizeof(buffer) - len, "<p>PID %d (%.2f) Temp %d Time %d</p>", (int) round(correction.correction), correction.correction, 
-            correction.exhaustTemperature, correction.burnTimeMinutes);
-        if (len > sizeof(buffer) * 0.8) {
-            server.sendContent(buffer);
-            len = 0;
-        }
-    }
-    if(len > 0) 
-    {
-        server.sendContent(buffer);
-    }
-
-    int sinceStartedMinutes = millis() / 1000 / 60;
-    server.sendContent("Free memory " + String(ESP.getFreeHeap()) + " " + String(ESP.getHeapFragmentation()) + "%"+ "</br>" 
-        + "Minutes since start " + String(sinceStartedMinutes) + "</br>" 
-        + "Reset reason: " + ESP.getResetReason());
-    server.sendContent_P(htmlPart3); 
-    server.sendContent("");
+  /*
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(LittleFS, "/style.css", "text/css");
+  });
+  */
 }
 
 void WebserverConfiguration::init() {
@@ -128,6 +63,10 @@ void WebserverConfiguration::init() {
     setupOtp();
     server.on("/", [this]() { handleRoot(); }); 
     server.onNotFound([this]() { handleRoot(); });
+
+    server.on("/api/stats", [this]() { handleStats(); });
+    server.on("/api/logs", [this]() { handleLogs(); });
+
     server.begin(); 
 }
 
@@ -141,4 +80,50 @@ void WebserverConfiguration::reconnectIfDisconnected() {
         WiFi.disconnect();
         connectToWiFi();
     }
+}
+
+void WebserverConfiguration::handleStats() {
+    Stats& stats = BurnLogger::getStats();
+    char json[300];
+    snprintf(json, sizeof(json),
+            "{\"exhaustTemperature\":%d,"
+            "\"waterTemperature\":%d,"
+            "\"burnTime\":%d,"
+            "\"lowerExhaustLimit\":%d,"
+            "\"upperExhaustLimit\":%d,"
+            "\"primaryAirDamper\":%d,"
+            "\"freeHeap\":%d,"
+            "\"heapFragmentation\":%d,"
+            "\"resetReason\":\"%s\"}",
+            stats.exhaustTemperature, stats.waterTemperature, stats.burnTimeMinutes,
+            stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition, ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getResetReason().c_str());
+
+  server.send(200, "application/json", json);
+}
+
+void WebserverConfiguration::handleLogs() {
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server.send(200, "application/json", "");
+    bool first = true;
+    char buf[256];
+    size_t len = 0;
+    const auto& entries = BurnLogger::getEntries();
+    for(const auto& e : entries)
+    {
+        yield();
+        len += snprintf(buf + len, sizeof(buf) - len,
+            "%c{\"correction\":%.2f,\"exhaustTemperature\":%d,\"burnTimeMinutes\":%d}",
+            first ? '[' : ',', e.correction, e.exhaustTemperature, e.burnTimeMinutes);
+        first = false;
+        if (len > sizeof(buf) * 0.8) {
+            server.sendContent(buf);
+            len = 0;
+        }
+    }
+    if(len > 0) 
+    {
+        server.sendContent(buf);
+    }
+    server.sendContent("]");
+    server.sendContent("");
 }

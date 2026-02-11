@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <max6675.h>
+#include <LittleFS.h>
 
 #include "Display.h"
 #include "Timer.h"
@@ -71,6 +72,7 @@ void setup() {
   primaryAirDamper.moveToStep(40);
   BurnLogger::getStats().primaryAirDamperPosition = primaryAirDamper._currentPosition;
   webserverConfig.init();
+  LittleFS.begin();
 }
 
 void loop() {

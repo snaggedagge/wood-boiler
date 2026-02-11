@@ -11,6 +11,9 @@ private:
 
     void connectToWiFi();
     void setupOtp();
+
+    void handleStats();
+    void handleLogs();
 public:
     WebserverConfiguration(const char* wifi_ssid, const char* wifi_password) : 
     ssid(wifi_ssid), password(wifi_password), server(80) { }

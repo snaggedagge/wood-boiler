@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Boiler Stats</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+           .stats-table { width: 50%; border-collapse: collapse; margin-bottom: 20px; }
+            .stats-table th, .stats-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .stats-table th { background-color: #f4f4f4; }
+            .log { border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; }
+        </style>
+    </head>
+    <body>
+        <h1>Boiler Stats</h1>
+        <table class="stats-table">
+            <tr><th>Property</th><th>Value</th></tr>
+            <tr><td>Burn Time</td><td><span id="burn-time">--</span></td></tr>
+            <tr><td>Exhaust Temperature</td><td><span id="exhaust-temperature">--</span></td></tr>
+            <tr><td>Water Temperature</td><td><span id="water-temperature">--</span></td></tr>
+            <tr><td>Lower Exhaust Limit</td><td><span id="lower-exhaust-limit">--</span></td></tr>
+            <tr><td>Upper Exhaust Limit</td><td><span id="upper-exhaust-limit">--</span></td></tr>
+            <tr><td>Primary Air Damper</td><td><span id="primary-air-damper">--</span></td></tr>
+            <tr><td>Heating</td><td><span id="heating">--</span></td></tr>
+            <tr><td>Free Heap</td><td><span id="free-heap">--</span></td></tr>
+            <tr><td>Reset Reason</td><td><span id="reset-reason">--</span></td></tr>
+            <tr><td>Heap Fragmentation</td><td><span id="heap-fragmentation">--</span>%</td></tr>
+        </table>
+        <div class="log">
+            <h3>Log</h3>
+            <div id="log-entries">Loading...</div>
+        </div>
+<script>
+async function updateStats() {
+    const r = await fetch("/api/stats");
+    const data = await r.json();
+    document.getElementById("burn-time").innerText = data.burnTime;
+    document.getElementById("exhaust-temperature").innerText = data.exhaustTemperature;
+    document.getElementById("water-temperature").innerText = data.waterTemperature;
+    document.getElementById("lower-exhaust-limit").innerText = data.lowerExhaustLimit;
+    document.getElementById("upper-exhaust-limit").innerText = data.upperExhaustLimit;
+    document.getElementById("primary-air-damper").innerText = data.primaryAirDamper;
+    document.getElementById("heating").innerText = data.heating ? "Yes" : "No";
+    document.getElementById("free-heap").innerText = data.freeHeap;
+    document.getElementById("reset-reason").innerText = data.resetReason;
+    document.getElementById("heap-fragmentation").innerText = data.heapFragmentation;
+}
+setInterval(updateStats, 5000);
+updateStats();
+
+async function updateLog() {
+    try {
+        const r = await fetch('/api/logs');
+        const data = await r.json();
+        const container = document.getElementById('log-entries');
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '<p>No log entries</p>';
+            return;
+        }
+        container.innerHTML = data.map(entry => {
+            return `PID ${Math.round(entry.correction)} (${entry.correction.toFixed(2)}) Temp ${entry.exhaustTemperature} Time ${entry.burnTimeMinutes} min`;
+        }).join('<br>');
+    } catch (e) {
+        document.getElementById('log-entries').innerHTML = '<p>Error loading log</p>';
+        console.error('Error fetching log data:', e);
+    }
+}
+updateLog();
+
+</script>
+</body>
+</html>
