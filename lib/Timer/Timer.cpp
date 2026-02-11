@@ -1,11 +1,15 @@
 
 #include "Timer.h"
 
-bool Timer::hasPassed(int seconds, unsigned long millisSinceStart) {
-  if (timers[seconds] == millisSinceStart || (timers[seconds] + (seconds * 1000)) > millisSinceStart)
+bool Timer::hasPassed(int s, unsigned long millisSinceStart) {
+  return hasPassedMillis(s * 1000, millisSinceStart);
+}
+
+bool Timer::hasPassedMillis(unsigned long ms, unsigned long millisSinceStart) {
+  if ((timers[ms] + ms) >= millisSinceStart)
   {
     return false;
   }
-  timers[seconds] = millisSinceStart;
+  timers[ms] = millisSinceStart;
   return true;
 }

@@ -59,9 +59,9 @@ void WebserverConfiguration::connectToWiFi() {
     }
 */
     WiFi.begin(ssid, password);
-    if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    //if (WiFi.waitForConnectResult() != WL_CONNECTED) {
         //logManager.addLog(F("Connection Failed!"));    
-    }
+    //}
 }
 
 void WebserverConfiguration::setupOtp() { // Over the air programming. Enables flashing over WIFI
@@ -101,6 +101,7 @@ void WebserverConfiguration::handleRoot() {
     const auto& entries = BurnLogger::getEntries();
     for(const auto& correction : entries)
     {
+        yield();
         len += snprintf(buffer + len, sizeof(buffer) - len, "<p>PID %d (%.2f) Temp %d Time %d</p>", (int) round(correction.correction), correction.correction, 
             correction.exhaustTemperature, correction.burnTimeMinutes);
         if (len > sizeof(buffer) * 0.8) {

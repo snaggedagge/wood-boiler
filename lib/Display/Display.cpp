@@ -85,5 +85,6 @@ void Display::display(Stats* stats) {
 }
 
 void Display::drawImage(Image img, int x, int y) {
+  yield();
   d->drawBitmap(x, y, img.data, img.width, img.height, WHITE);
 }

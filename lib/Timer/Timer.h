@@ -5,9 +5,10 @@
 
 class Timer {
 public:
-    bool hasPassed(int seconds, unsigned long millisSinceStart);
+    bool hasPassed(int s, unsigned long millisSinceStart);
+    bool hasPassedMillis(unsigned long ms, unsigned long millisSinceStart);
 private:
-    std::map<int, unsigned long> timers;
+    std::map<unsigned long, unsigned long> timers;
 };
 
 #endif

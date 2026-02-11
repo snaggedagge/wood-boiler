@@ -47,6 +47,7 @@ int wantedTemperature = 195;
 bool reachedTemperature = false;
 
 float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
+  yield();
   return sensor.readCelsius();
 }
 
@@ -56,7 +57,6 @@ void updateTemperatures() {
 }
 
 void setup() {
-
   BurnLogger::getStats() = {0, 0, 0, 100, 250, true, 0};
 
   pinMode(RELAY_PIN, OUTPUT);
@@ -64,7 +64,7 @@ void setup() {
   Wire.begin(SDA_PIN, SCL_PIN);
   display.init();
   display.displayLogo();
-  delay(3000);
+  delay(2000);
   updateTemperatures();
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
@@ -76,54 +76,53 @@ void setup() {
 void loop() {
   webserverConfig.handleUpdate();  
   unsigned long millisSinceStart = millis();
-  int sinceStartedMinutes = millisSinceStart / 1000 / 60;
-  Stats& stats = BurnLogger::getStats();
-  stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
-  stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
-
-  // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
-  // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
-  if (!reachedTemperature && stats.exhaustTemperature > 80 && sinceStartedMinutes > 0)
+  if (timer.hasPassedMillis(500, millisSinceStart))
   {
-    primaryAirDamper.moveToStep(22);
+    int sinceStartedMinutes = millisSinceStart / 1000 / 60;
+    Stats& stats = BurnLogger::getStats();
+    stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
+    stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
+
+    // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
+    // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
+    if (!reachedTemperature && stats.exhaustTemperature > 80 && sinceStartedMinutes > 0)
+    {
+      primaryAirDamper.moveToStep(22);
+    }
+    if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
+    {
+      reachedTemperature = true;
+      primaryAirDamper.moveToStep(18);
+      timer.hasPassed(180, millisSinceStart); // Reset timer
+    }
+
+    // TODO: Only for testing
+    if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
+    {
+      primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
+    }
+    if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
+    {
+      updateTemperatures();
+      digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
+    }
+
+    if (!stats.heating && primaryAirDamper._currentPosition > 0)
+    {
+      primaryAirDamper.moveToStep(0);
+      primaryAirDamper.shutdown();
+    }
+
+    if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
+    {
+      float pidCorrection = pidController.calculateControlSignal(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+      int correction = (int) round(pidCorrection);
+      BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
+      primaryAirDamper.moveTo(correction);
+    } else if (stats.heating) {
+      pidController.updateMeasuredValue(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+    }
     stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
+    display.display(&stats);
   }
-  if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
-  {
-    reachedTemperature = true;
-    primaryAirDamper.moveToStep(18);
-    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
-    timer.hasPassed(180, millisSinceStart); // Reset timer
-  }
-
-  // TODO: Only for testing
-  if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
-  {
-    primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
-  }
-  if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
-  {
-    updateTemperatures();
-    digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
-  }
-  display.display(&stats);
-
-  if (!stats.heating && primaryAirDamper._currentPosition > 0)
-  {
-    primaryAirDamper.moveToStep(0);
-    primaryAirDamper.shutdown();
-    //ESP.deepSleep(0);
-  }
-
-  if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
-  {
-    float pidCorrection = pidController.calculateControlSignal(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
-    int correction = (int) round(pidCorrection);
-    BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
-    primaryAirDamper.moveTo(correction);
-    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
-  } else if (stats.heating) {
-    pidController.updateMeasuredValue(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
-  }
-  delay(500);
 }

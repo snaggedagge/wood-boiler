@@ -67,6 +67,6 @@ void AirDamper::makeStep(bool open, int numberOfSteps) {
     digitalWrite(_step_pin, LOW);
     delay(30);
   }
-  delay(500);
+  //delay(500);
   //digitalWrite(_sleep_pin, HIGH);
 }
