@@ -41,20 +41,12 @@ void WebserverConfiguration::init() {
     connectToWiFi();
     setupOtp();
 
+    server.onNotFound([this]() { handleNotFound(); });
     server.on("/restart", [this]() { ESP.restart(); }); 
     server.on("/api/stats", [this]() { handleStats(); });
     server.on("/api/logs", [this]() { handleLogs(); });
-    server.serveStatic("/", LittleFS, "/index.html", "max-age=86400");
-    // TODO: Cache page when done tweaking, and gzip it
+    server.serveStatic("/", LittleFS, "/index.html", "public, max-age=31536000, immutable");
     server.begin(); 
-
-    /*
-    String path = server.uri();
-    if (path.startsWith("/test/")) {
-        int number = path.substring(6).toInt();
-        stats.primaryAirDamperPosition += number;
-    }
-    */
 }
 
 void WebserverConfiguration::handleUpdate() {
@@ -118,4 +110,15 @@ void WebserverConfiguration::handleLogs() {
     }
     server.sendContent("]");
     server.sendContent("");
+}
+
+
+void WebserverConfiguration::handleNotFound() {
+    String path = server.uri();
+    if (path.startsWith("/test/")) {
+        int number = path.substring(6).toInt();
+        BurnLogger::getStats().primaryAirDamperPosition += number;
+    }
+    server.sendHeader("Location", "/",true);
+    server.send(302, "text/plane","");
 }
