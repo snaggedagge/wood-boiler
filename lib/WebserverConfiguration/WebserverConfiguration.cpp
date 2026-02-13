@@ -63,19 +63,20 @@ void WebserverConfiguration::reconnectIfDisconnected() {
 
 void WebserverConfiguration::handleStats() {
     Stats& stats = BurnLogger::getStats();
-    char json[300];
+    char json[350];
     snprintf(json, sizeof(json),
             "{\"exhaustTemperature\":%d,"
             "\"waterTemperature\":%d,"
             "\"burnTime\":%d,"
+            "\"targetExhaustTemperature\":%d,"
             "\"lowerExhaustLimit\":%d,"
             "\"upperExhaustLimit\":%d,"
             "\"primaryAirDamper\":%d,"
             "\"freeHeap\":%d,"
             "\"heapFragmentation\":%d,"
             "\"resetReason\":\"%s\","
-            "\"heating\":\"%s\"}",
-            stats.exhaustTemperature, stats.waterTemperature, stats.burnTimeMinutes,
+            "\"heating\":%s}",
+            stats.exhaustTemperature, stats.waterTemperature, stats.burnTimeMinutes, stats.targetExhaustTemperature,
             stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition,
             ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getResetReason().c_str(), stats.heating? "true" : "false");
 
@@ -92,7 +93,10 @@ void WebserverConfiguration::handleLogs() {
     server.send(200, "application/json", "");
 
     bool first = true;
-    char buf[256];
+    int singleResponseLength = 70;
+    int responsesPerBatch = 5;
+    char buf[singleResponseLength * responsesPerBatch];
+    int counter = 1;
     size_t len = 0;
     for(const auto& e : entries)
     {
@@ -101,9 +105,10 @@ void WebserverConfiguration::handleLogs() {
             "%c{\"correction\":%.2f,\"exhaustTemperature\":%d,\"burnTimeMinutes\":%d}",
             first ? '[' : ',', e.correction, e.exhaustTemperature, e.burnTimeMinutes);
         first = false;
-        if (len > sizeof(buf) * 0.8) {
+        if (counter++ >= responsesPerBatch) {
             server.sendContent(buf);
             len = 0;
+            counter = 0;
         }
     }
     if(len > 0) 

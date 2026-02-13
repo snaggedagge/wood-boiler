@@ -17,6 +17,7 @@ struct Stats {
     int upperExhaustLimit;
     bool heating;
     int primaryAirDamperPosition;
+    int targetExhaustTemperature;
 };
 
 class BurnLogger

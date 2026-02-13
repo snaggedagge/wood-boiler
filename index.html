@@ -148,6 +148,33 @@
     .refresh{display:flex;align-items:center;gap:8px}
     .spinner{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent-2);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    .progress{
+      position:relative;
+    }
+
+    .target-marker{
+      position:absolute;
+      top:-4px;
+      bottom:-4px;
+      width:2px;
+      background:var(--warn);
+      left:0%;
+      transform:translateX(-1px);
+      pointer-events:none;
+    }
+
+    /* small triangle tip (optional but very nice visually) */
+    .target-marker::after{
+      content:'';
+      position:absolute;
+      top:-6px;
+      left:50%;
+      transform:translateX(-50%);
+      border-left:5px solid transparent;
+      border-right:5px solid transparent;
+      border-bottom:6px solid var(--warn);
+    }
   </style>
 </head>
 <body>
@@ -169,7 +196,10 @@
       <div class="card span-3">
         <h3>Exhaust Temperature</h3>
         <div class="row"><div class="stat" id="exhaust-temperature">--</div><div class="unit">°C</div></div>
-        <div class="progress"><div class="bar" id="exhaust-bar"></div></div>
+        <div class="progress">
+          <div class="bar" id="exhaust-bar"></div>
+          <div class="target-marker" id="target-exhaust-marker"></div>
+        </div>
       </div>
 
       <div class="card span-3">
@@ -188,6 +218,7 @@
           <div>Primary Air Damper</div><div id="primary-air-damper">--</div>
           <div>Lower Exhaust Limit</div><div id="lower-exhaust-limit">--</div>
           <div>Upper Exhaust Limit</div><div id="upper-exhaust-limit">--</div>
+          <div>Target Exhaust Temperature</div><div id="target-exhaust-temperature">--</div>
           <div>Free Heap</div><div id="free-heap">--</div>
           <div>Heap Fragmentation</div><div><span id="heap-fragmentation">--</span>%</div>
           <div>Reset Reason</div><div id="reset-reason" class="muted">--</div>
@@ -218,13 +249,25 @@ function updateHeating(on){
   el.querySelector('span:last-child').textContent=on?'Heating Active':'Idle';
 }
 
-function updateExhaustBar(temp,low,high){
-  const bar=document.getElementById('exhaust-bar');
-  if(!bar||!temp||!high) return;
-  const pct=Math.max(0,Math.min(100,(temp/(high||1))*100));
-  bar.style.width=pct+'%';
-}
+function updateExhaustBar(temp, low, high, target){
+  const bar = document.getElementById('exhaust-bar');
+  const marker = document.getElementById('target-exhaust-marker');
 
+  if(!bar || !marker) return;
+  if(isNaN(temp) || isNaN(low) || isNaN(high) || high <= low) return;
+
+  // --- Bar fill (current exhaust temp) ---
+  let pct = ((temp - low) / (high - low)) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  bar.style.width = pct + '%';
+
+  // --- Target marker position ---
+  if(!isNaN(target)){
+    let targetPct = ((target - low) / (high - low)) * 100;
+    targetPct = Math.max(0, Math.min(100, targetPct));
+    marker.style.left = targetPct + '%';
+  }
+}
 function stamp(){
   const t=new Date();
   document.getElementById('last-updated').textContent='Updated '+t.toLocaleTimeString();
@@ -245,8 +288,14 @@ async function updateStats(){
     setText('free-heap',data.freeHeap);
     setText('reset-reason',data.resetReason);
     setText('heap-fragmentation',data.heapFragmentation);
+    setText('target-exhaust-temperature',data.targetExhaustTemperature);
     updateHeating(data.heating);
-    updateExhaustBar(Number(data.exhaustTemperature),Number(data.lowerExhaustLimit),Number(data.upperExhaustLimit));
+    updateExhaustBar(
+      Number(data.exhaustTemperature),
+      Number(data.lowerExhaustLimit),
+      Number(data.upperExhaustLimit),
+      Number(data.targetExhaustTemperature)
+    );
     stamp();
   }catch(e){
     document.getElementById('last-updated').textContent='Connection error';

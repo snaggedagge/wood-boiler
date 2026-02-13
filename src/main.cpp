@@ -58,7 +58,7 @@ void updateTemperatures() {
 }
 
 void setup() {
-  BurnLogger::getStats() = {0, 0, 0, 100, 250, true, 0};
+  BurnLogger::getStats() = {0, 0, 0, 100, 250, true, 0, wantedTemperature};
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
@@ -117,12 +117,12 @@ void loop() {
 
     if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
     {
-      float pidCorrection = pidController.calculateControlSignal(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+      float pidCorrection = pidController.calculateControlSignal(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
       int correction = (int) round(pidCorrection);
       BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
       primaryAirDamper.moveTo(correction);
     } else if (stats.heating) {
-      pidController.updateMeasuredValue(wantedTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+      pidController.updateMeasuredValue(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
     }
     stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
     display.display(&stats);
