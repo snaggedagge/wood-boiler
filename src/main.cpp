@@ -90,18 +90,6 @@ void loop() {
       primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
     }
 
-    // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
-    // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
-    if (!reachedTemperature && stats.exhaustTemperature > 80 && sinceStartedMinutes > 0)
-    {
-      primaryAirDamper.moveToStep(22);
-    }
-    if ((!reachedTemperature && stats.exhaustTemperature > 145) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
-    {
-      reachedTemperature = true;
-      primaryAirDamper.moveToStep(18);
-      timer.hasPassed(180, millisSinceStart); // Reset timer
-    }
     if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
     {
       webserverConfig.reconnectIfDisconnected();
@@ -109,10 +97,13 @@ void loop() {
       digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
     }
 
-    if (!stats.heating && primaryAirDamper._currentPosition > 0)
+    // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
+    // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
+    if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
     {
-      primaryAirDamper.moveToStep(0);
-      primaryAirDamper.shutdown();
+      reachedTemperature = true;
+      primaryAirDamper.moveToStep(18);
+      timer.hasPassed(180, millisSinceStart); // Reset timer
     }
 
     if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
@@ -124,6 +115,12 @@ void loop() {
     } else if (stats.heating) {
       pidController.updateMeasuredValue(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
     }
+    if (!stats.heating && primaryAirDamper._currentPosition > 0)
+    {
+      primaryAirDamper.moveToStep(0);
+      primaryAirDamper.shutdown();
+    }
+
     stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
     display.display(&stats);
   }

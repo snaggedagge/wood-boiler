@@ -108,7 +108,7 @@ void WebserverConfiguration::handleLogs() {
         if (counter++ >= responsesPerBatch) {
             server.sendContent(buf);
             len = 0;
-            counter = 0;
+            counter = 1;
         }
     }
     if(len > 0) 
