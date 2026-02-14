@@ -70,7 +70,6 @@ void setup() {
   primaryAirDamper.init();
   primaryAirDamper.hardResetPosition();
   primaryAirDamper.moveToStep(40);
-  BurnLogger::getStats().primaryAirDamperPosition = primaryAirDamper._currentPosition;
   webserverConfig.init();
   LittleFS.begin();
 }
@@ -85,6 +84,7 @@ void loop() {
     stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
     stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
 
+    // If position has been updated by webserver
     if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
     {
       primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
@@ -120,8 +120,6 @@ void loop() {
       primaryAirDamper.moveToStep(0);
       primaryAirDamper.shutdown();
     }
-
-    stats.primaryAirDamperPosition = primaryAirDamper._currentPosition;
     display.display(&stats);
   }
 }

@@ -1,5 +1,6 @@
 
 #include "AirDamper.h"
+#include "BurnLogger.h"
 #include <Arduino.h>
 
 void AirDamper::init() {
@@ -69,4 +70,5 @@ void AirDamper::makeStep(bool open, int numberOfSteps) {
   }
   //delay(500);
   //digitalWrite(_sleep_pin, HIGH);
+  BurnLogger::getStats().primaryAirDamperPosition = _currentPosition;
 }
