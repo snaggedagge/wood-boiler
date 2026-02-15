@@ -5,36 +5,19 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
-
 #include <ArduinoOTA.h>
-
-#include "BurnLogger.h"
 #include <LittleFS.h>
 
+#include "BurnLogger.h"
 
 void WebserverConfiguration::connectToWiFi() {
-
-/*
-    IPAddress ip(192, 168, 1, 100); // 192.168.13.37
-    IPAddress gateway(192, 168, 1, 1);
-    IPAddress dns(8, 8, 8, 8);
-    if (!WiFi.config(ip, dns, gateway)) {
-        //addLog("Static IP Configuration Failed");
-    }
-        */
-
     WiFi.begin(ssid, password);
-    //if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        //logManager.addLog(F("Connection Failed!"));    
-    //}
 }
 
 void WebserverConfiguration::setupOtp() { // Over the air programming. Enables flashing over WIFI
     ArduinoOTA.setHostname("wood-boiler");
     ArduinoOTA.begin();
 }
-
-
 
 void WebserverConfiguration::init() {
     WiFi.mode(WIFI_STA);
@@ -44,7 +27,7 @@ void WebserverConfiguration::init() {
     server.onNotFound([this]() { handleNotFound(); });
     server.on("/restart", [this]() { ESP.restart(); }); 
     server.on("/api/stats", [this]() { handleStats(); });
-    server.on("/api/logs", [this]() { handleLogs(); });
+    server.serveStatic("/api/logs", LittleFS, BurnLogger::getLogFilename(), "no-cache");
     server.serveStatic("/", LittleFS, "/index.html", "public, max-age=31536000, immutable");
     server.begin(); 
 }
@@ -79,46 +62,8 @@ void WebserverConfiguration::handleStats() {
             stats.exhaustTemperature, stats.waterTemperature, stats.burnTimeMinutes, stats.targetExhaustTemperature,
             stats.lowerExhaustLimit, stats.upperExhaustLimit, stats.primaryAirDamperPosition,
             ESP.getFreeHeap(), ESP.getHeapFragmentation(), ESP.getResetReason().c_str(), stats.heating? "true" : "false");
-
   server.send(200, "application/json", json);
 }
-
-void WebserverConfiguration::handleLogs() {
-    const auto& entries = BurnLogger::getEntries();
-    if (entries.size() == 0) {
-        server.send(200, "application/json", "[]");
-        return;
-    }
-    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-    server.send(200, "application/json", "");
-
-    bool first = true;
-    int singleResponseLength = 70;
-    int responsesPerBatch = 5;
-    char buf[singleResponseLength * responsesPerBatch];
-    int counter = 1;
-    size_t len = 0;
-    for(const auto& e : entries)
-    {
-        yield();
-        len += snprintf(buf + len, sizeof(buf) - len,
-            "%c{\"correction\":%.2f,\"exhaustTemperature\":%d,\"burnTimeMinutes\":%d}",
-            first ? '[' : ',', e.correction, e.exhaustTemperature, e.burnTimeMinutes);
-        first = false;
-        if (counter++ >= responsesPerBatch) {
-            server.sendContent(buf);
-            len = 0;
-            counter = 1;
-        }
-    }
-    if(len > 0) 
-    {
-        server.sendContent(buf);
-    }
-    server.sendContent("]");
-    server.sendContent("");
-}
-
 
 void WebserverConfiguration::handleNotFound() {
     String path = server.uri();

@@ -1,21 +1,23 @@
+#include <LittleFS.h>
 #include "BurnLogger.h"
 
-std::vector<PidCorrection> BurnLogger::entries;
 Stats BurnLogger::stats;
+bool firstLog = true;
 
 void BurnLogger::addEntry(int burnTimeMinutes, int exhaustTemperature, float correction)
 {
-    PidCorrection entry;
-    entry.burnTimeMinutes = burnTimeMinutes;
-    entry.exhaustTemperature = exhaustTemperature;
-    entry.correction = correction;
-
-    entries.push_back(entry);
+    fs::File logs = LittleFS.open(getLogFilename(), firstLog ? "w" : "r+");
+    if (logs.size() > 0)
+        logs.seek(1, SeekEnd);
+    logs.printf("%c{\"correction\":%.2f,\"exhaustTemperature\":%d,\"burnTimeMinutes\":%d}]",
+        firstLog ? '[' : ',', correction, exhaustTemperature, burnTimeMinutes);
+    logs.close();
+    firstLog = false;
 }
 
-const std::vector<PidCorrection>& BurnLogger::getEntries()
+const char* BurnLogger::getLogFilename()
 {
-    return entries;
+    return "/logs.json";
 }
 
 Stats& BurnLogger::getStats()

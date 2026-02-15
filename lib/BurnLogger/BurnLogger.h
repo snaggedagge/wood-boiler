@@ -3,11 +3,6 @@
 
 #include <Arduino.h>
 #include <vector>
-struct PidCorrection {
-    int burnTimeMinutes;
-    int exhaustTemperature;
-    float correction;
-};
 
 struct Stats {
     int burnTimeMinutes;
@@ -24,12 +19,9 @@ class BurnLogger
 {
 public:
     static void addEntry(int burnTimeMinutes, int exhaustTemperature, float correction);
-
-    static const std::vector<PidCorrection>& getEntries();
+    static const char* getLogFilename();
     static Stats& getStats();
-
 private:
-    static std::vector<PidCorrection> entries;
     static Stats stats; 
 };
 
