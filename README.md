@@ -8,4 +8,6 @@ This controls a relay which powers the exhaust fan. Exhaust fan is stopped once 
 
 Information is displayed on a 128 x 64 pixel SH1106 OLED display, with nice symbols etc.
 
-Pictures coming up...
+![Webgui of boiler.](webpage.jpg)
+
+![Picture of boiler.](boiler.jpg)
