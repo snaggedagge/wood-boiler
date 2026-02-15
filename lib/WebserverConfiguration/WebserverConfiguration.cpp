@@ -27,6 +27,7 @@ void WebserverConfiguration::init() {
     server.onNotFound([this]() { handleNotFound(); });
     server.on("/restart", [this]() { ESP.restart(); }); 
     server.on("/api/stats", [this]() { handleStats(); });
+    server.serveStatic("/api/info", LittleFS, BurnLogger::getInfoFilename(), "no-cache");
     server.serveStatic("/api/logs", LittleFS, BurnLogger::getLogFilename(), "no-cache");
     server.serveStatic("/", LittleFS, "/index.html", "public, max-age=31536000, immutable");
     server.begin(); 

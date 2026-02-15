@@ -20,7 +20,9 @@ class BurnLogger
 public:
     static void addEntry(int burnTimeMinutes, int exhaustTemperature, float correction);
     static const char* getLogFilename();
+    static const char* getInfoFilename();
     static Stats& getStats();
+    static void shutdown(unsigned long effectiveBurnTimeMinutes);
 private:
     static Stats stats; 
 };

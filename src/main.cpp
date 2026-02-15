@@ -30,6 +30,9 @@
 #define STEP_PIN 1 // TX
 #define STEPPER_SLEEP_PIN 14 // D5
 
+#define NTP_SERVER "at.pool.ntp.org"           
+#define TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"   
+
 // PID parameters
 double Kp = 0.018;   // Proportional gain
 double Ki = 0.001;   // Integral gain // 0.001 worked nicely but was teeny tiny to slow, especially at the end. 0.0012 too aggressive
@@ -46,6 +49,7 @@ WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge");
 
 int wantedTemperature = 195;
 bool reachedTemperature = false;
+unsigned long reachedTemperatureTime = 0;
 
 float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
   yield();
@@ -72,6 +76,7 @@ void setup() {
   primaryAirDamper.moveToStep(40);
   webserverConfig.init();
   LittleFS.begin();
+  configTime(TZ, NTP_SERVER);
 }
 
 void loop() {
@@ -102,6 +107,7 @@ void loop() {
     if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
     {
       reachedTemperature = true;
+      reachedTemperatureTime = millisSinceStart;
       primaryAirDamper.moveToStep(18);
       timer.hasPassed(180, millisSinceStart); // Reset timer
     }
@@ -119,6 +125,8 @@ void loop() {
     {
       primaryAirDamper.moveToStep(0);
       primaryAirDamper.shutdown();
+      if (reachedTemperatureTime > 0)
+        BurnLogger::shutdown((millisSinceStart - reachedTemperatureTime) / 1000 / 60);
     }
     display.display(&stats);
   }
