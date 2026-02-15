@@ -125,8 +125,10 @@ void loop() {
     {
       primaryAirDamper.moveToStep(0);
       primaryAirDamper.shutdown();
-      if (reachedTemperatureTime > 0)
+      if (reachedTemperatureTime > 0) {
         BurnLogger::shutdown((millisSinceStart - reachedTemperatureTime) / 1000 / 60);
+        reachedTemperatureTime = 0;
+      }
     }
     display.display(&stats);
   }

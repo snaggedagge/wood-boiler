@@ -21,17 +21,18 @@ void BurnLogger::shutdown(unsigned long effectiveBurnTimeMinutes)
 {
     fs::File info = LittleFS.open(getInfoFilename(), LittleFS.exists(getInfoFilename()) ? "r+" : "w");
     JsonDocument doc;
-    if (info.size() > 0)
-    {
-          deserializeJson(doc, info);
+    if (info.size() > 0) {
+        deserializeJson(doc, info);
     }
     else {
         time_t now;
         time(&now);
         doc["completeBurnTimeMinutes"] = 0;
+        doc["numberOfBurns"] = 0;
         doc["since"] = now;
     }
     doc["completeBurnTimeMinutes"] = effectiveBurnTimeMinutes + doc["completeBurnTimeMinutes"].as<unsigned long>();
+    doc["numberOfBurns"] = doc["numberOfBurns"].as<unsigned long>() + 1;
     info.seek(0, SeekSet);
     serializeJson(doc, info);
     info.close();
