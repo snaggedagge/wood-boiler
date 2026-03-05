@@ -21,12 +21,12 @@ void BurnLogger::shutdown(unsigned long effectiveBurnTimeMinutes)
 {
     fs::File info = LittleFS.open(getInfoFilename(), LittleFS.exists(getInfoFilename()) ? "r+" : "w");
     JsonDocument doc;
+    time_t now;
+    time(&now);
     if (info.size() > 0) {
         deserializeJson(doc, info);
     }
     else {
-        time_t now;
-        time(&now);
         doc["completeBurnTimeMinutes"] = 0;
         doc["numberOfBurns"] = 0;
         doc["since"] = now;
@@ -36,6 +36,14 @@ void BurnLogger::shutdown(unsigned long effectiveBurnTimeMinutes)
     info.seek(0, SeekSet);
     serializeJson(doc, info);
     info.close();
+
+    bool fileExists = LittleFS.exists(getStatisticsFilename());
+    fs::File statistics = LittleFS.open(getStatisticsFilename(), fileExists ? "r+" : "w");
+    if (statistics.size() > 0)
+        statistics.seek(1, SeekEnd);
+    statistics.printf("%c{\"effectiveBurnTimeMinutes\":%ld,\"time\":%lld}]",
+        !fileExists ? '[' : ',', effectiveBurnTimeMinutes, now);
+    statistics.close();
 }
 
 const char* BurnLogger::getLogFilename()
@@ -46,6 +54,11 @@ const char* BurnLogger::getLogFilename()
 const char* BurnLogger::getInfoFilename()
 {
     return "/info.json";
+}
+
+const char* BurnLogger::getStatisticsFilename()
+{
+    return "/statistics.json";
 }
 
 Stats& BurnLogger::getStats()

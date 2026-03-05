@@ -3,6 +3,10 @@
 #include <cmath>
 #include "PIDController.h"
 
+#ifdef DEBUG
+    #include <iostream>
+#endif
+
 double PIDController::calculateControlSignal(double desiredValue, double measuredValue, int currentMinute) { 
     updateMeasuredValue(desiredValue, measuredValue, currentMinute);
     double dt = currentMinute - this->lastMinuteAtTarget;
@@ -22,7 +26,8 @@ double PIDController::calculateControlSignal(double desiredValue, double measure
 
     #ifdef DEBUG
         std::cout << "Temp "  << measuredValue << " Correction " << round(output) << " (" << output << ")" << " Derivative " << derivative 
-        << " kd " << (Kd * derivative) << " ki" << (Ki * this->integral * scalingFactor) << " kp " << (Kp * error) << " "<< scalingFactor<< "\n";
+        << " kd " << (Kd * derivative) << " ki" << (Ki * this->integral * scalingFactor) << " kp " << (Kp * error) << " "<< scalingFactor<< " " << currentMinute << "\n";
+
     #endif
 
     return output;

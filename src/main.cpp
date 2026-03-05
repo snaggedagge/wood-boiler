@@ -112,7 +112,7 @@ void loop() {
       timer.hasPassed(180, millisSinceStart); // Reset timer
     }
 
-    if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 2 minutes
+    if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 3 minutes
     {
       float pidCorrection = pidController.calculateControlSignal(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
       int correction = (int) round(pidCorrection);

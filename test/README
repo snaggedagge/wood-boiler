@@ -16,4 +16,8 @@ More information about PlatformIO Unit Testing:
 
 cd /mnt/c/Users/dag-k/Documents/PlatformIO/Projects/wood-boiler/test
 
-from wsl, run g++ simulation.cpp && ./a.out
+from wsl, run
+
+
+ g++ -DDEBUG -std=c++20 -Wall -Wextra -O2
+ simulation.cpp ../lib/PIDController/PIDController.cpp -o sim && ./sim
