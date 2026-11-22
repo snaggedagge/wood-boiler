@@ -12,7 +12,7 @@ double PIDController::calculateControlSignal(double desiredValue, double measure
     double dt = currentMinute - this->lastMinuteAtTarget;
     if (dt < 1)
     {
-        dt = 2;
+        dt = 1;
     }
 
     double error = desiredValue - measuredValue;
@@ -27,7 +27,6 @@ double PIDController::calculateControlSignal(double desiredValue, double measure
     #ifdef DEBUG
         std::cout << "Temp "  << measuredValue << " Correction " << round(output) << " (" << output << ")" << " Derivative " << derivative 
         << " kd " << (Kd * derivative) << " ki" << (Ki * this->integral * scalingFactor) << " kp " << (Kp * error) << " "<< scalingFactor<< " " << currentMinute << "\n";
-
     #endif
 
     return output;

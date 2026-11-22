@@ -1,0 +1,722 @@
+[
+    {
+        "correction": -1.14,
+        "exhaustTemperature": 201,
+        "burnTimeMinutes": 3
+    },
+    {
+        "correction": -2.64,
+        "exhaustTemperature": 232,
+        "burnTimeMinutes": 6
+    },
+    {
+        "correction": -1.63,
+        "exhaustTemperature": 231,
+        "burnTimeMinutes": 9
+    },
+    {
+        "correction": -1.07,
+        "exhaustTemperature": 221,
+        "burnTimeMinutes": 12
+    },
+    {
+        "correction": -1.19,
+        "exhaustTemperature": 216,
+        "burnTimeMinutes": 15
+    },
+    {
+        "correction": -1.48,
+        "exhaustTemperature": 214,
+        "burnTimeMinutes": 18
+    },
+    {
+        "correction": -1.68,
+        "exhaustTemperature": 212,
+        "burnTimeMinutes": 21
+    },
+    {
+        "correction": -1.77,
+        "exhaustTemperature": 209,
+        "burnTimeMinutes": 24
+    },
+    {
+        "correction": 0.59,
+        "exhaustTemperature": 199,
+        "burnTimeMinutes": 27
+    },
+    {
+        "correction": 1.34,
+        "exhaustTemperature": 186,
+        "burnTimeMinutes": 30
+    },
+    {
+        "correction": 0.24,
+        "exhaustTemperature": 188,
+        "burnTimeMinutes": 33
+    },
+    {
+        "correction": -0.52,
+        "exhaustTemperature": 195,
+        "burnTimeMinutes": 36
+    },
+    {
+        "correction": -0.46,
+        "exhaustTemperature": 199,
+        "burnTimeMinutes": 39
+    },
+    {
+        "correction": -0.73,
+        "exhaustTemperature": 202,
+        "burnTimeMinutes": 42
+    },
+    {
+        "correction": 0.41,
+        "exhaustTemperature": 196,
+        "burnTimeMinutes": 45
+    },
+    {
+        "correction": 1.67,
+        "exhaustTemperature": 187,
+        "burnTimeMinutes": 48
+    },
+    {
+        "correction": 0.26,
+        "exhaustTemperature": 188,
+        "burnTimeMinutes": 51
+    },
+    {
+        "correction": -0.18,
+        "exhaustTemperature": 192,
+        "burnTimeMinutes": 54
+    },
+    {
+        "correction": 0.13,
+        "exhaustTemperature": 192,
+        "burnTimeMinutes": 57
+    },
+    {
+        "correction": 0.24,
+        "exhaustTemperature": 191,
+        "burnTimeMinutes": 60
+    },
+    {
+        "correction": 0.62,
+        "exhaustTemperature": 187,
+        "burnTimeMinutes": 63
+    },
+    {
+        "correction": 0.09,
+        "exhaustTemperature": 189,
+        "burnTimeMinutes": 66
+    },
+    {
+        "correction": -0.45,
+        "exhaustTemperature": 195,
+        "burnTimeMinutes": 69
+    },
+    {
+        "correction": 0.00,
+        "exhaustTemperature": 195,
+        "burnTimeMinutes": 72
+    },
+    {
+        "correction": 0.23,
+        "exhaustTemperature": 193,
+        "burnTimeMinutes": 75
+    },
+    {
+        "correction": 0.08,
+        "exhaustTemperature": 193,
+        "burnTimeMinutes": 78
+    },
+    {
+        "correction": 0.20,
+        "exhaustTemperature": 192,
+        "burnTimeMinutes": 81
+    },
+    {
+        "correction": 0.35,
+        "exhaustTemperature": 190,
+        "burnTimeMinutes": 84
+    },
+    {
+        "correction": 0.58,
+        "exhaustTemperature": 188,
+        "burnTimeMinutes": 87
+    },
+    {
+        "correction": 0.09,
+        "exhaustTemperature": 189,
+        "burnTimeMinutes": 90
+    },
+    {
+        "correction": 0.01,
+        "exhaustTemperature": 191,
+        "burnTimeMinutes": 93
+    },
+    {
+        "correction": -0.53,
+        "exhaustTemperature": 197,
+        "burnTimeMinutes": 96
+    },
+    {
+        "correction": -0.31,
+        "exhaustTemperature": 199,
+        "burnTimeMinutes": 99
+    },
+    {
+        "correction": -0.28,
+        "exhaustTemperature": 200,
+        "burnTimeMinutes": 102
+    },
+    {
+        "correction": 0.38,
+        "exhaustTemperature": 195,
+        "burnTimeMinutes": 105
+    },
+    {
+        "correction": 0.58,
+        "exhaustTemperature": 190,
+        "burnTimeMinutes": 108
+    },
+    {
+        "correction": 0.43,
+        "exhaustTemperature": 188,
+        "burnTimeMinutes": 111
+    },
+    {
+        "correction": 0.45,
+        "exhaustTemperature": 186,
+        "burnTimeMinutes": 114
+    },
+    {
+        "correction": 0.47,
+        "exhaustTemperature": 186,
+        "burnTimeMinutes": 117
+    },
+    {
+        "correction": 0.65,
+        "exhaustTemperature": 184,
+        "burnTimeMinutes": 120
+    },
+    {
+        "correction": 0.84,
+        "exhaustTemperature": 183,
+        "burnTimeMinutes": 123
+    },
+    {
+        "correction": 1.08,
+        "exhaustTemperature": 182,
+        "burnTimeMinutes": 126
+    },
+    {
+        "correction": 1.03,
+        "exhaustTemperature": 185,
+        "burnTimeMinutes": 129
+    },
+    {
+        "correction": -0.63,
+        "exhaustTemperature": 194,
+        "burnTimeMinutes": 132
+    },
+    {
+        "correction": -0.65,
+        "exhaustTemperature": 200,
+        "burnTimeMinutes": 135
+    },
+    {
+        "correction": -0.56,
+        "exhaustTemperature": 204,
+        "burnTimeMinutes": 138
+    },
+    {
+        "correction": 0.10,
+        "exhaustTemperature": 200,
+        "burnTimeMinutes": 141
+    },
+    {
+        "correction": -0.21,
+        "exhaustTemperature": 200,
+        "burnTimeMinutes": 144
+    },
+    {
+        "correction": 0.03,
+        "exhaustTemperature": 198,
+        "burnTimeMinutes": 147
+    },
+    {
+        "correction": 0.34,
+        "exhaustTemperature": 194,
+        "burnTimeMinutes": 150
+    },
+    {
+        "correction": 0.50,
+        "exhaustTemperature": 190,
+        "burnTimeMinutes": 153
+    },
+    {
+        "correction": 0.48,
+        "exhaustTemperature": 187,
+        "burnTimeMinutes": 156
+    },
+    {
+        "correction": 0.61,
+        "exhaustTemperature": 183,
+        "burnTimeMinutes": 159
+    },
+    {
+        "correction": 0.81,
+        "exhaustTemperature": 179,
+        "burnTimeMinutes": 162
+    },
+    {
+        "correction": 1.07,
+        "exhaustTemperature": 176,
+        "burnTimeMinutes": 165
+    },
+    {
+        "correction": 1.40,
+        "exhaustTemperature": 174,
+        "burnTimeMinutes": 168
+    },
+    {
+        "correction": 1.70,
+        "exhaustTemperature": 175,
+        "burnTimeMinutes": 171
+    },
+    {
+        "correction": 2.18,
+        "exhaustTemperature": 175,
+        "burnTimeMinutes": 174
+    },
+    {
+        "correction": 2.50,
+        "exhaustTemperature": 176,
+        "burnTimeMinutes": 177
+    },
+    {
+        "correction": 2.76,
+        "exhaustTemperature": 178,
+        "burnTimeMinutes": 180
+    },
+    {
+        "correction": 3.25,
+        "exhaustTemperature": 179,
+        "burnTimeMinutes": 183
+    },
+    {
+        "correction": 3.87,
+        "exhaustTemperature": 179,
+        "burnTimeMinutes": 186
+    },
+    {
+        "correction": 4.45,
+        "exhaustTemperature": 179,
+        "burnTimeMinutes": 189
+    },
+    {
+        "correction": 4.87,
+        "exhaustTemperature": 180,
+        "burnTimeMinutes": 192
+    },
+    {
+        "correction": 5.40,
+        "exhaustTemperature": 181,
+        "burnTimeMinutes": 195
+    },
+    {
+        "correction": 5.71,
+        "exhaustTemperature": 183,
+        "burnTimeMinutes": 198
+    },
+    {
+        "correction": -5.22,
+        "exhaustTemperature": 213,
+        "burnTimeMinutes": 201
+    },
+    {
+        "correction": -1.20,
+        "exhaustTemperature": 219,
+        "burnTimeMinutes": 204
+    },
+    {
+        "correction": -1.06,
+        "exhaustTemperature": 218,
+        "burnTimeMinutes": 207
+    },
+    {
+        "correction": -0.84,
+        "exhaustTemperature": 213,
+        "burnTimeMinutes": 210
+    },
+    {
+        "correction": -0.69,
+        "exhaustTemperature": 207,
+        "burnTimeMinutes": 213
+    },
+    {
+        "correction": -1.10,
+        "exhaustTemperature": 208,
+        "burnTimeMinutes": 216
+    },
+    {
+        "correction": -1.04,
+        "exhaustTemperature": 205,
+        "burnTimeMinutes": 219
+    },
+    {
+        "correction": -1.27,
+        "exhaustTemperature": 204,
+        "burnTimeMinutes": 222
+    },
+    {
+        "correction": -1.59,
+        "exhaustTemperature": 207,
+        "burnTimeMinutes": 225
+    },
+    {
+        "correction": -1.90,
+        "exhaustTemperature": 206,
+        "burnTimeMinutes": 228
+    },
+    {
+        "correction": -1.90,
+        "exhaustTemperature": 203,
+        "burnTimeMinutes": 231
+    },
+    {
+        "correction": -2.43,
+        "exhaustTemperature": 210,
+        "burnTimeMinutes": 234
+    },
+    {
+        "correction": -3.32,
+        "exhaustTemperature": 220,
+        "burnTimeMinutes": 237
+    },
+    {
+        "correction": -4.15,
+        "exhaustTemperature": 216,
+        "burnTimeMinutes": 240
+    },
+    {
+        "correction": -3.98,
+        "exhaustTemperature": 208,
+        "burnTimeMinutes": 243
+    },
+    {
+        "correction": -4.17,
+        "exhaustTemperature": 202,
+        "burnTimeMinutes": 246
+    },
+    {
+        "correction": 0.64,
+        "exhaustTemperature": 194,
+        "burnTimeMinutes": 249
+    },
+    {
+        "correction": 0.62,
+        "exhaustTemperature": 189,
+        "burnTimeMinutes": 252
+    },
+    {
+        "correction": 0.70,
+        "exhaustTemperature": 184,
+        "burnTimeMinutes": 255
+    },
+    {
+        "correction": 0.52,
+        "exhaustTemperature": 184,
+        "burnTimeMinutes": 258
+    },
+    {
+        "correction": 0.66,
+        "exhaustTemperature": 183,
+        "burnTimeMinutes": 261
+    },
+    {
+        "correction": 0.80,
+        "exhaustTemperature": 183,
+        "burnTimeMinutes": 264
+    },
+    {
+        "correction": 1.00,
+        "exhaustTemperature": 182,
+        "burnTimeMinutes": 267
+    },
+    {
+        "correction": 1.26,
+        "exhaustTemperature": 182,
+        "burnTimeMinutes": 270
+    },
+    {
+        "correction": 1.55,
+        "exhaustTemperature": 180,
+        "burnTimeMinutes": 273
+    },
+    {
+        "correction": 1.85,
+        "exhaustTemperature": 181,
+        "burnTimeMinutes": 276
+    },
+    {
+        "correction": 2.28,
+        "exhaustTemperature": 178,
+        "burnTimeMinutes": 279
+    },
+    {
+        "correction": 2.64,
+        "exhaustTemperature": 180,
+        "burnTimeMinutes": 282
+    },
+    {
+        "correction": 3.11,
+        "exhaustTemperature": 181,
+        "burnTimeMinutes": 285
+    },
+    {
+        "correction": 3.64,
+        "exhaustTemperature": 178,
+        "burnTimeMinutes": 288
+    },
+    {
+        "correction": 4.51,
+        "exhaustTemperature": 177,
+        "burnTimeMinutes": 291
+    },
+    {
+        "correction": 5.32,
+        "exhaustTemperature": 176,
+        "burnTimeMinutes": 294
+    },
+    {
+        "correction": 5.87,
+        "exhaustTemperature": 164,
+        "burnTimeMinutes": 298
+    },
+    {
+        "correction": 7.82,
+        "exhaustTemperature": 153,
+        "burnTimeMinutes": 301
+    },
+    {
+        "correction": 10.75,
+        "exhaustTemperature": 148,
+        "burnTimeMinutes": 304
+    },
+    {
+        "correction": 13.68,
+        "exhaustTemperature": 145,
+        "burnTimeMinutes": 307
+    },
+    {
+        "correction": 16.80,
+        "exhaustTemperature": 143,
+        "burnTimeMinutes": 310
+    },
+    {
+        "correction": 20.00,
+        "exhaustTemperature": 141,
+        "burnTimeMinutes": 313
+    },
+    {
+        "correction": 23.47,
+        "exhaustTemperature": 139,
+        "burnTimeMinutes": 316
+    },
+    {
+        "correction": 27.25,
+        "exhaustTemperature": 137,
+        "burnTimeMinutes": 319
+    },
+    {
+        "correction": 31.68,
+        "exhaustTemperature": 136,
+        "burnTimeMinutes": 322
+    },
+    {
+        "correction": 35.22,
+        "exhaustTemperature": 133,
+        "burnTimeMinutes": 325
+    },
+    {
+        "correction": 40.83,
+        "exhaustTemperature": 132,
+        "burnTimeMinutes": 328
+    },
+    {
+        "correction": 45.34,
+        "exhaustTemperature": 130,
+        "burnTimeMinutes": 331
+    },
+    {
+        "correction": 51.21,
+        "exhaustTemperature": 129,
+        "burnTimeMinutes": 334
+    },
+    {
+        "correction": 56.84,
+        "exhaustTemperature": 128,
+        "burnTimeMinutes": 337
+    },
+    {
+        "correction": 62.14,
+        "exhaustTemperature": 126,
+        "burnTimeMinutes": 340
+    },
+    {
+        "correction": 69.10,
+        "exhaustTemperature": 125,
+        "burnTimeMinutes": 343
+    },
+    {
+        "correction": 75.70,
+        "exhaustTemperature": 124,
+        "burnTimeMinutes": 346
+    },
+    {
+        "correction": 81.87,
+        "exhaustTemperature": 122,
+        "burnTimeMinutes": 349
+    },
+    {
+        "correction": 89.99,
+        "exhaustTemperature": 121,
+        "burnTimeMinutes": 352
+    },
+    {
+        "correction": 97.63,
+        "exhaustTemperature": 120,
+        "burnTimeMinutes": 355
+    },
+    {
+        "correction": 104.73,
+        "exhaustTemperature": 118,
+        "burnTimeMinutes": 358
+    },
+    {
+        "correction": 114.09,
+        "exhaustTemperature": 117,
+        "burnTimeMinutes": 361
+    },
+    {
+        "correction": 123.84,
+        "exhaustTemperature": 117,
+        "burnTimeMinutes": 364
+    },
+    {
+        "correction": 131.77,
+        "exhaustTemperature": 116,
+        "burnTimeMinutes": 367
+    },
+    {
+        "correction": 141.12,
+        "exhaustTemperature": 115,
+        "burnTimeMinutes": 370
+    },
+    {
+        "correction": 150.83,
+        "exhaustTemperature": 114,
+        "burnTimeMinutes": 373
+    },
+    {
+        "correction": 160.91,
+        "exhaustTemperature": 113,
+        "burnTimeMinutes": 376
+    },
+    {
+        "correction": 172.67,
+        "exhaustTemperature": 113,
+        "burnTimeMinutes": 380
+    },
+    {
+        "correction": 182.14,
+        "exhaustTemperature": 112,
+        "burnTimeMinutes": 383
+    },
+    {
+        "correction": 193.30,
+        "exhaustTemperature": 111,
+        "burnTimeMinutes": 386
+    },
+    {
+        "correction": 204.85,
+        "exhaustTemperature": 110,
+        "burnTimeMinutes": 389
+    },
+    {
+        "correction": 218.22,
+        "exhaustTemperature": 110,
+        "burnTimeMinutes": 392
+    },
+    {
+        "correction": 228.89,
+        "exhaustTemperature": 109,
+        "burnTimeMinutes": 395
+    },
+    {
+        "correction": 241.50,
+        "exhaustTemperature": 108,
+        "burnTimeMinutes": 398
+    },
+    {
+        "correction": 254.51,
+        "exhaustTemperature": 107,
+        "burnTimeMinutes": 401
+    },
+    {
+        "correction": 267.93,
+        "exhaustTemperature": 106,
+        "burnTimeMinutes": 404
+    },
+    {
+        "correction": 283.46,
+        "exhaustTemperature": 106,
+        "burnTimeMinutes": 407
+    },
+    {
+        "correction": 295.79,
+        "exhaustTemperature": 105,
+        "burnTimeMinutes": 410
+    },
+    {
+        "correction": 310.33,
+        "exhaustTemperature": 104,
+        "burnTimeMinutes": 413
+    },
+    {
+        "correction": 327.16,
+        "exhaustTemperature": 104,
+        "burnTimeMinutes": 416
+    },
+    {
+        "correction": 340.46,
+        "exhaustTemperature": 103,
+        "burnTimeMinutes": 419
+    },
+    {
+        "correction": 356.16,
+        "exhaustTemperature": 102,
+        "burnTimeMinutes": 422
+    },
+    {
+        "correction": 374.32,
+        "exhaustTemperature": 102,
+        "burnTimeMinutes": 425
+    },
+    {
+        "correction": 388.62,
+        "exhaustTemperature": 101,
+        "burnTimeMinutes": 428
+    },
+    {
+        "correction": 405.52,
+        "exhaustTemperature": 100,
+        "burnTimeMinutes": 431
+    },
+    {
+        "correction": 425.05,
+        "exhaustTemperature": 100,
+        "burnTimeMinutes": 434
+    }
+]

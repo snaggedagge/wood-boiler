@@ -34,9 +34,9 @@
 #define TZ "CET-1CEST,M3.5.0/02,M10.5.0/03"   
 
 // PID parameters
-double Kp = 0.018;   // Proportional gain
+double Kp = 0.040;   // Proportional gain
 double Ki = 0.001;   // Integral gain // 0.001 worked nicely but was teeny tiny to slow, especially at the end. 0.0012 too aggressive
-double Kd = 0.20;   // Derivative gain // 0.15 worked nicely, lets try a little bit more aggressive
+double Kd = 0.15;   // Derivative gain // 0.15 worked nicely, lets try a little bit more aggressive
 PIDController pidController(Kp, Ki, Kd);
 
 Adafruit_SH1106 oled(-1);
@@ -125,8 +125,9 @@ void loop() {
     {
       primaryAirDamper.moveToStep(0);
       primaryAirDamper.shutdown();
-      if (reachedTemperatureTime > 0) {
-        BurnLogger::shutdown((millisSinceStart - reachedTemperatureTime) / 1000 / 60);
+      unsigned long effectiveBurnTimeMinutes = (millisSinceStart - reachedTemperatureTime) / 1000 / 60;
+      if (effectiveBurnTimeMinutes > 120) {// Only log if burn time was more than 2 hours{
+        BurnLogger::shutdown(effectiveBurnTimeMinutes);
         reachedTemperatureTime = 0;
       }
     }

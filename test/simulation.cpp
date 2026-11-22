@@ -18,7 +18,7 @@ double Kd = 0.035;   // Derivative gain
 
 */
 
-double Kp = 0.06;   // Proportional gain
+double Kp = 0.04;   // Proportional gain
 double Ki = 0.001;   // Integral gain // 0.001 worked nicely but was teeny tiny to slow, especially at the end. 0.0012 too aggressive
 double Kd = 0.15;   // Derivative gain // 0.15 worked nicely, lets try a little bit more aggressive
 int minutes = 32;
@@ -39,7 +39,7 @@ int main() {
     pidController2.updateMeasuredValue(195, 130, 2);
     simulate(pidController2, 159);
     simulate(pidController2, 158);
-    simulate(pidController2, 148);
+    simulate(pidController2, 170);
     simulate(pidController2, 198);
     simulate(pidController2, 199);
     simulate(pidController2, 184);

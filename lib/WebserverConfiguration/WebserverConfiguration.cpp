@@ -74,5 +74,5 @@ void WebserverConfiguration::handleNotFound() {
         BurnLogger::getStats().primaryAirDamperPosition += number;
     }
     server.sendHeader("Location", "/",true);
-    server.send(302, "text/plane","");
+    server.send(200, "text/plane","");
 }
