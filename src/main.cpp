@@ -50,7 +50,7 @@ WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge");
 int wantedTemperature = 195;
 bool reachedTemperature = false;
 unsigned long reachedTemperatureTime = 0;
-bool burnedOut = false;
+bool burnLogged = false;
 
 float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
   yield();
@@ -89,53 +89,49 @@ void loop() {
     Stats& stats = BurnLogger::getStats();
     stats.heating = !(sinceStartedMinutes > 60 && stats.exhaustTemperature < stats.lowerExhaustLimit) && stats.waterTemperature < 100;
     stats.burnTimeMinutes = stats.heating ? sinceStartedMinutes : stats.burnTimeMinutes;
-    if (!burnedOut) {
-      // If position has been updated by webserver
-      if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
-      {
-        primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
-      }
+    // If position has been updated by webserver
+    if (stats.primaryAirDamperPosition != primaryAirDamper._currentPosition)
+    {
+      primaryAirDamper.moveToStep(stats.primaryAirDamperPosition);
+    }
 
-      if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
-      {
-        updateTemperatures();
-        digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
-      }
+    if (timer.hasPassed(5, millisSinceStart)) // Only read temp every 5 seconds
+    {
+      webserverConfig.reconnectIfDisconnected(); // Cant be too frequent, has to give it time to connect
+      updateTemperatures();
+      digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
+    }
 
-      // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
-      // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
-      if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
-      {
-        reachedTemperature = true;
-        reachedTemperatureTime = millisSinceStart;
-        primaryAirDamper.moveToStep(18);
-        timer.hasPassed(180, millisSinceStart); // Reset timer
-      }
+    // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
+    // In case it is hot when starting, let PID take over immediately. Probably reboot or power outage
+    if ((!reachedTemperature && stats.exhaustTemperature > 155) || (!reachedTemperature && stats.exhaustTemperature > 100 && sinceStartedMinutes == 0))
+    {
+      reachedTemperature = true;
+      reachedTemperatureTime = millisSinceStart;
+      primaryAirDamper.moveToStep(18);
+      timer.hasPassed(180, millisSinceStart); // Reset timer
+    }
 
-      if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 3 minutes
-      {
-        float pidCorrection = pidController.calculateControlSignal(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
-        int correction = (int) round(pidCorrection);
-        BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
-        primaryAirDamper.moveTo(correction);
-      } else if (stats.heating) {
-        pidController.updateMeasuredValue(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
-      }
-      if (!stats.heating && primaryAirDamper._currentPosition > 0)
-      {
-        primaryAirDamper.moveToStep(0);
-        primaryAirDamper.shutdown();
-        burnedOut = true;
-        unsigned long effectiveBurnTimeMinutes = (millisSinceStart - reachedTemperatureTime) / 1000 / 60;
-        if (effectiveBurnTimeMinutes > 120) {// Only log if burn time was more than 2 hours{
-          BurnLogger::shutdown(effectiveBurnTimeMinutes);
-          reachedTemperatureTime = 0;
-        }
+    if (reachedTemperature && stats.heating && timer.hasPassed(180, millisSinceStart)) // Adjust stepper every 3 minutes
+    {
+      float pidCorrection = pidController.calculateControlSignal(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+      int correction = (int) round(pidCorrection);
+      BurnLogger::addEntry(stats.burnTimeMinutes, stats.exhaustTemperature, pidCorrection);
+      primaryAirDamper.moveTo(correction);
+    } else if (stats.heating) {
+      pidController.updateMeasuredValue(stats.targetExhaustTemperature, stats.exhaustTemperature, sinceStartedMinutes);
+    }
+    if (!stats.heating && primaryAirDamper._currentPosition > 0)
+    {
+      primaryAirDamper.moveToStep(0);
+      primaryAirDamper.shutdown();
+      unsigned long effectiveBurnTimeMinutes = (millisSinceStart - reachedTemperatureTime) / 1000 / 60;
+      if (!burnLogged && effectiveBurnTimeMinutes > 120) {// Only log if burn time was more than 2 hours{
+        BurnLogger::shutdown(effectiveBurnTimeMinutes);
+        reachedTemperatureTime = 0;
+        burnLogged = true;
       }
     }
     display.display(&stats);
   }
-
-  if (timer.hasPassed(10, millisSinceStart)) // Cant be too frequent, has to give it time to connect
-    webserverConfig.reconnectIfDisconnected();
 }
