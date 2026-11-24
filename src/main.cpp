@@ -8,6 +8,7 @@
 #include "PIDController.h"
 #include "WebserverConfiguration.h"
 #include "BurnLogger.h"
+#include "Notifier.h"
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
@@ -47,6 +48,20 @@ AirDamper primaryAirDamper(DIRECTION_PIN, STEP_PIN, STEPPER_SLEEP_PIN, 56);
 Timer timer;
 WebserverConfiguration webserverConfig("4G-Gateway-21E0", "snaggedagge");
 
+// Push notifications via ntfy. Pick a long, hard-to-guess topic and subscribe to it in the ntfy app.
+#define NTFY_TOPIC "wood-boiler-x7k2q9"
+#define NO_FIRE_CHECK_MINUTES 15     // Not above NO_FIRE_TEMPERATURE after this long => probably no fire
+#define NO_FIRE_TEMPERATURE 50
+#define HOT_TEMPERATURE 120          // First time reaching this => notify
+#define REFILL_TEMPERATURE HOT_TEMPERATURE-10 // Dropping to this after being hot...
+#define REFILL_WINDOW_MINUTES 120    // ...within this long since start => remind to add wood
+Notifier notifier(NTFY_TOPIC);
+bool exceededNoFireTemperature = false;
+bool noFireNotified = false;
+bool hotReached = false;
+bool hotNotified = false;
+bool refillNotified = false;
+
 int wantedTemperature = 195;
 bool reachedTemperature = false;
 unsigned long reachedTemperatureTime = 0;
@@ -60,6 +75,33 @@ float readSensor(MAX6675& sensor, int lowerLimit, int higherLimit) {
 void updateTemperatures() {
     BurnLogger::getStats().exhaustTemperature = readSensor(exhaustSensor, 0, 350);
     BurnLogger::getStats().waterTemperature = readSensor(waterSensor, 0, 130);
+}
+
+// A flag is only set when ntfy accepted the message, so a failed send (e.g. WiFi down) is retried on the next call.
+void checkNotifications(const Stats& stats, int sinceStartedMinutes) {
+  int temp = stats.exhaustTemperature;
+
+  if (temp > NO_FIRE_TEMPERATURE) {
+    exceededNoFireTemperature = true;
+  }
+  if (!exceededNoFireTemperature && !noFireNotified && sinceStartedMinutes >= NO_FIRE_CHECK_MINUTES) {
+    noFireNotified = notifier.send("Ingen eld?",
+      String("Temperaturen har inte stigit över ") + NO_FIRE_TEMPERATURE + " grader på " + NO_FIRE_CHECK_MINUTES + " minuter. Du fick antagligen inte eld.",
+      "warning", "high");
+  }
+
+  if (temp >= HOT_TEMPERATURE) {
+    hotReached = true;
+    if (!hotNotified) {
+      hotNotified = notifier.send("Pannan är varm", String("Pannan har nått ") + temp + " grader.", "fire");
+    }
+  }
+
+  if (hotReached && !refillNotified && temp <= REFILL_TEMPERATURE && sinceStartedMinutes < REFILL_WINDOW_MINUTES) {
+    refillNotified = notifier.send("Fyll på ved",
+      String("Temperaturen har sjunkit till ") + temp + " grader efter att ha varit över " + HOT_TEMPERATURE + ". Dags att fylla på.",
+      "wood", "high");
+  }
 }
 
 void setup() {
@@ -100,6 +142,7 @@ void loop() {
       webserverConfig.reconnectIfDisconnected(); // Cant be too frequent, has to give it time to connect
       updateTemperatures();
       digitalWrite(RELAY_PIN, stats.heating ? HIGH : LOW);
+      checkNotifications(stats, sinceStartedMinutes);
     }
 
     // Let temperature get high enough before PID takes over, difficult to use same config in starting phase as in burning phase.
